@@ -4,172 +4,315 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Rental PS — Kasir Digital</title>
+<script>
+  // Set tema sedini mungkin biar tidak "kedip" warna salah saat halaman dibuka.
+  (function () {
+    try {
+      var t = localStorage.getItem("rp_theme") || "light";
+      document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
   :root {
-    --rp-paper: #EFE8D8;
-    --rp-paper-2: #E7DEC8;
-    --rp-ink: #232B3D;
-    --rp-ink-dim: #6B6656;
-    --rp-line: #C9BFA4;
-    --rp-red: #B23A2E;
-    --rp-teal: #2F6F62;
-    --rp-amber: #C6852E;
-    --rp-navy: #1B3A63;
-    --rp-navy-soft: #8CA3BF;
+    /* ===== Token yang SELALU sama di kedua tema (identitas brand) ===== */
     --rp-serif: 'Fraunces', Georgia, serif;
     --rp-mono: 'IBM Plex Mono', 'Courier New', monospace;
     --rp-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --rp-btn-text: #F4F1E4;
+
+    /* ===== Token yang beda per tema — default GELAP ("navy ledger") di sini,
+       ditimpa oleh [data-theme="light"] di bawah ===== */
+    --rp-page-bg: #0A0D16;
+    --rp-grid-line: rgba(140,163,191,0.055);
+    --rp-grid-dot: rgba(140,163,191,0.075);
+    --rp-sidebar-bg: rgba(10,13,21,0.92);
+    --rp-surface: rgba(18,22,35,0.86);
+    --rp-surface-2: rgba(23,28,43,0.86);
+    --rp-surface-solid: #131829;
+    --rp-border: rgba(140,163,191,0.17);
+    --rp-border-strong: rgba(140,163,191,0.34);
+    --rp-ink: #EDE7D8;
+    --rp-ink-dim: #8E9CB6;
+    --rp-line: rgba(140,163,191,0.17);
+    --rp-hover-tint: rgba(140,163,191,0.1);
+    --rp-input-bg: rgba(150,175,210,0.045);
+    --rp-th-bg: rgba(150,175,210,0.03);
+    --rp-neutral-tint: rgba(140,163,191,0.13);
+    --rp-overlay: rgba(3,5,11,0.68);
+    --rp-elevation-shadow: rgba(1,3,10,0.6);
+    --rp-panel-shadow: 0 14px 34px -18px rgba(1,4,16,0.7);
+    --rp-panel-highlight: rgba(185,205,235,0.065);
+    --rp-scrollbar: rgba(140,163,191,0.3);
+    --rp-scrollbar-hover: rgba(140,163,191,0.48);
+    --rp-focus-ring: rgba(157,187,221,0.3);
+    --rp-accent-rgb: 157,187,221;
+
+    --rp-chip-bg: #EDE7D8;
+    --rp-chip-text: #14213B;
+
+    --rp-red: #E2695A;
+    --rp-red-tint: rgba(226,105,90,0.14);
+    --rp-red-ring: rgba(226,105,90,0.45);
+    --rp-red-glow: rgba(226,105,90,0.4);
+    --rp-teal: #4FAE9C;
+    --rp-teal-tint: rgba(79,174,156,0.14);
+    --rp-amber: #DDA753;
+    --rp-amber-tint: rgba(221,167,83,0.16);
+    --rp-navy: #9DBBDD;
+    --rp-navy-soft: #64809F;
+  }
+  [data-theme="light"] {
+    --rp-page-bg: #EFE8D8;
+    --rp-grid-line: rgba(35,43,61,0.045);
+    --rp-grid-dot: rgba(35,43,61,0.05);
+    --rp-sidebar-bg: rgba(231,222,200,0.92);
+    --rp-surface: rgba(231,222,200,0.9);
+    --rp-surface-2: rgba(231,222,200,0.96);
+    --rp-surface-solid: #EFE8D8;
+    --rp-border: #C9BFA4;
+    --rp-border-strong: #B8AC8C;
+    --rp-ink: #232B3D;
+    --rp-ink-dim: #6B6656;
+    --rp-line: #C9BFA4;
+    --rp-hover-tint: rgba(35,43,61,0.06);
+    --rp-input-bg: #FFFFFF;
+    --rp-th-bg: #E7DEC8;
+    --rp-neutral-tint: rgba(107,102,86,0.12);
+    --rp-overlay: rgba(35,43,61,0.35);
+    --rp-elevation-shadow: rgba(35,43,61,0.18);
+    --rp-panel-shadow: 0 10px 24px -18px rgba(35,43,61,0.3);
+    --rp-panel-highlight: rgba(255,255,255,0.5);
+    --rp-scrollbar: rgba(35,43,61,0.18);
+    --rp-scrollbar-hover: rgba(35,43,61,0.3);
+    --rp-focus-ring: rgba(27,58,99,0.18);
+    --rp-accent-rgb: 27,58,99;
+
+    --rp-chip-bg: #232B3D;
+    --rp-chip-text: #F4F1E4;
+
+    --rp-red: #B23A2E;
+    --rp-red-tint: rgba(178,58,46,0.12);
+    --rp-red-ring: rgba(178,58,46,0.4);
+    --rp-red-glow: rgba(178,58,46,0.22);
+    --rp-teal: #2F6F62;
+    --rp-teal-tint: rgba(47,111,98,0.12);
+    --rp-amber: #C6852E;
+    --rp-amber-tint: rgba(198,133,46,0.14);
+    --rp-navy: #1B3A63;
+    --rp-navy-soft: #8CA3BF;
   }
   * { box-sizing: border-box; }
   html, body {
     margin: 0; height: 100%;
-    background: var(--rp-paper); color: var(--rp-ink);
+    background-color: var(--rp-page-bg);
+    background-image:
+      linear-gradient(var(--rp-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--rp-grid-line) 1px, transparent 1px);
+    background-size: 42px 42px;
+    background-attachment: fixed;
+    color: var(--rp-ink);
     font-family: var(--rp-sans);
+    transition: background-color .2s ease, color .2s ease;
   }
   #root { display: flex; min-height: 100vh; }
   .rp-mono { font-family: var(--rp-mono); }
 
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rp-scrollbar); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--rp-scrollbar-hover); }
+
   /* Sidebar */
-  .rp-sidebar { width: 232px; flex-shrink: 0; background: var(--rp-paper-2); border-right: 1px solid var(--rp-line); display: flex; flex-direction: column; padding: 18px 14px; }
-  .rp-brand { display: flex; gap: 10px; align-items: center; padding-bottom: 16px; margin-bottom: 14px; border-bottom: 1px solid var(--rp-line); }
-  .rp-brand-mark { width: 34px; height: 34px; border-radius: 4px; background: var(--rp-ink); color: var(--rp-paper); font-family: var(--rp-serif); font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .rp-sidebar {
+    width: 236px; flex-shrink: 0; background: var(--rp-sidebar-bg);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border-right: 1px solid var(--rp-border);
+    display: flex; flex-direction: column; padding: 18px 14px;
+  }
+  .rp-brand { display: flex; gap: 10px; align-items: center; padding-bottom: 16px; margin-bottom: 14px; border-bottom: 1px solid var(--rp-border); }
+  .rp-brand-mark {
+    width: 36px; height: 36px; border-radius: 9px; background: var(--rp-chip-bg);
+    color: var(--rp-chip-text); font-family: var(--rp-serif); font-weight: 700; font-size: 13px; letter-spacing: 0.01em;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 0 0 1px var(--rp-panel-highlight) inset, 0 6px 16px -8px var(--rp-elevation-shadow);
+  }
   .rp-brand-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
   .rp-brand-input { font-family: var(--rp-serif); font-weight: 600; font-size: 14.5px; color: var(--rp-ink); background: transparent; border: none; padding: 0; width: 100%; }
   .rp-brand-input:focus { outline: none; border-bottom: 1px dashed var(--rp-ink-dim); }
   .rp-brand-sub { font-size: 11px; color: var(--rp-ink-dim); }
   .rp-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-  .rp-nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 4px; border: none; background: transparent; color: var(--rp-ink-dim); font-size: 13.5px; text-align: left; cursor: pointer; font-family: var(--rp-sans); width: 100%; }
-  .rp-nav-item:hover { background: rgba(35,43,61,0.06); color: var(--rp-ink); }
-  .rp-nav-item.is-active { background: var(--rp-ink); color: var(--rp-paper); }
-  .rp-sidebar-foot { border-top: 1px solid var(--rp-line); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .rp-nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; border: none; background: transparent; color: var(--rp-ink-dim); font-size: 13.5px; text-align: left; cursor: pointer; font-family: var(--rp-sans); width: 100%; transition: background .15s ease, color .15s ease; }
+  .rp-nav-item:hover { background: var(--rp-hover-tint); color: var(--rp-ink); }
+  .rp-nav-item.is-active { background: var(--rp-chip-bg); color: var(--rp-chip-text); box-shadow: 0 6px 14px -8px var(--rp-elevation-shadow); }
+  .rp-sidebar-foot { border-top: 1px solid var(--rp-border); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
   .rp-stat-mini { display: flex; flex-direction: column; font-size: 11px; color: var(--rp-ink-dim); }
-  .rp-stat-mini strong { font-size: 13px; color: var(--rp-ink); }
+  .rp-stat-mini strong { font-size: 13px; color: var(--rp-ink); font-family: var(--rp-mono); }
   .rp-sync-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--rp-ink-dim); margin-top: 4px; }
-  .rp-sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rp-teal); flex-shrink: 0; }
+  .rp-sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rp-teal); flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
   .rp-sync-dot.is-busy { background: var(--rp-amber); }
   .rp-sync-dot.is-error { background: var(--rp-red); }
-  .rp-refresh-btn { background: transparent; border: 1px solid var(--rp-line); border-radius: 4px; color: var(--rp-ink-dim); font-size: 11px; padding: 5px 8px; cursor: pointer; margin-top: 4px; }
-  .rp-refresh-btn:hover { color: var(--rp-ink); }
+  .rp-refresh-btn { background: transparent; border: 1px solid var(--rp-border); border-radius: 6px; color: var(--rp-ink-dim); font-size: 11px; padding: 5px 8px; cursor: pointer; margin-top: 4px; }
+  .rp-refresh-btn:hover { color: var(--rp-ink); border-color: var(--rp-border-strong); }
 
   /* Main */
   .rp-main { flex: 1; overflow-y: auto; padding: 28px 32px; min-width: 0; height: 100vh; }
   .rp-page { max-width: 940px; }
   .rp-page-head { margin-bottom: 20px; }
   .rp-page-head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
-  .rp-page-head h1 { font-family: var(--rp-serif); font-weight: 600; font-size: 24px; margin: 0 0 4px; }
+  .rp-page-head h1 { font-family: var(--rp-serif); font-weight: 600; font-size: 23px; margin: 0 0 4px; letter-spacing: -0.01em; }
   .rp-sub { color: var(--rp-ink-dim); font-size: 13px; margin: 0; }
-  .rp-ruled-head { font-family: var(--rp-serif); font-size: 14px; font-weight: 600; padding-bottom: 6px; margin: 22px 0 12px; border-bottom: 1px solid var(--rp-line); }
+  .rp-ruled-head { font-family: var(--rp-serif); font-size: 13.5px; font-weight: 600; padding-bottom: 6px; margin: 22px 0 12px; border-bottom: 1px solid var(--rp-border); color: var(--rp-ink); }
 
   .rp-stat-row { display: flex; gap: 14px; flex-wrap: wrap; }
-  .rp-stat-card { flex: 1; min-width: 160px; background: var(--rp-paper-2); border: 1px solid var(--rp-line); border-radius: 4px; padding: 14px 16px; min-width: 0; }
+  .rp-stat-card { flex: 1; min-width: 160px; background: var(--rp-surface); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--rp-border); border-radius: 10px; padding: 14px 16px; min-width: 0; box-shadow: var(--rp-panel-shadow), inset 0 1px 0 var(--rp-panel-highlight); }
   .rp-stat-label { display: block; font-size: 11.5px; color: var(--rp-ink-dim); margin-bottom: 6px; overflow-wrap: break-word; }
-  .rp-stat-value { font-size: 20px; color: var(--rp-ink); overflow-wrap: break-word; }
+  .rp-stat-value { font-size: 20px; color: var(--rp-ink); overflow-wrap: break-word; font-family: var(--rp-mono); }
 
   .rp-unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
-  .rp-card { position: relative; background: var(--rp-paper-2); border: 1px solid var(--rp-line); border-radius: 4px; padding: 16px; }
-  .rp-unit-card.is-active { border-color: var(--rp-red); }
-  .rp-unit-card.is-maint { opacity: 0.7; }
-  .rp-unit-name { font-family: var(--rp-serif); font-weight: 600; font-size: 15px; margin-bottom: 2px; padding-right: 60px; }
-  .rp-unit-rate { font-size: 12px; color: var(--rp-ink-dim); margin-bottom: 12px; }
-  .rp-timer { font-size: 22px; font-weight: 600; color: var(--rp-red); margin-bottom: 2px; }
+  .rp-card {
+    position: relative; overflow: hidden; background-color: var(--rp-surface);
+    background-image: radial-gradient(var(--rp-grid-dot) 1px, transparent 1px);
+    background-size: 14px 14px;
+    border: 1px solid var(--rp-border); border-top: none; border-radius: 10px; padding: 18px 16px 16px;
+    box-shadow: var(--rp-panel-shadow), inset 0 1px 0 var(--rp-panel-highlight);
+  }
+  .rp-card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: var(--rp-teal); border-radius: 10px 10px 0 0;
+  }
+  .rp-clickable { cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+  .rp-clickable:hover { transform: translateY(-2px); box-shadow: 0 16px 34px -16px var(--rp-elevation-shadow), inset 0 1px 0 var(--rp-panel-highlight); }
+  .rp-unit-card.is-active { border-color: var(--rp-red-ring); box-shadow: 0 0 0 1px var(--rp-red-tint), 0 10px 30px -12px var(--rp-red-glow), var(--rp-panel-shadow); }
+  .rp-unit-card.is-active.rp-clickable:hover { box-shadow: 0 0 0 1px var(--rp-red-tint), 0 16px 34px -16px var(--rp-red-glow), var(--rp-panel-shadow); }
+  .rp-unit-card.is-active::before { background: var(--rp-red); box-shadow: 0 0 10px var(--rp-red-glow); }
+  .rp-unit-card.is-maint { opacity: 0.6; }
+  .rp-unit-card.is-maint::before { background: var(--rp-ink-dim); }
+  .rp-unit-name { font-family: var(--rp-serif); font-weight: 600; font-size: 15px; margin-bottom: 2px; padding-right: 64px; color: var(--rp-ink); }
+  .rp-unit-rate { font-size: 12px; color: var(--rp-ink-dim); margin-bottom: 12px; font-family: var(--rp-mono); }
+  .rp-timer { font-size: 22px; font-weight: 600; color: var(--rp-red); margin-bottom: 2px; font-family: var(--rp-mono); }
   .rp-timer.is-warning { color: var(--rp-amber); animation: rp-blink 1s step-start infinite; }
   .rp-timer.is-over { color: var(--rp-red); animation: rp-blink 0.6s step-start infinite; }
   @keyframes rp-blink { 50% { opacity: 0.35; } }
   .rp-unit-customer { font-size: 12px; color: var(--rp-ink-dim); margin-bottom: 6px; }
-  .rp-running-cost { font-size: 13px; color: var(--rp-amber); margin-bottom: 12px; }
+  .rp-running-cost { font-size: 13px; color: var(--rp-amber); margin-bottom: 12px; font-family: var(--rp-mono); }
   .rp-unit-note { font-size: 12px; color: var(--rp-ink-dim); font-style: italic; }
   .rp-card-actions { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
   .rp-card-actions .rp-btn { width: auto; flex: 1; min-width: 0; white-space: nowrap; }
 
-  .rp-stamp { position: absolute; top: 12px; right: 12px; font-family: var(--rp-mono); font-size: 10px; letter-spacing: 0.02em; padding: 3px 8px; border-radius: 3px; transform: rotate(2deg); border: 1px solid currentColor; }
-  .rp-stamp-inline { position: static; transform: none; display: inline-block; }
-  .rp-stamp-available { color: var(--rp-teal); }
-  .rp-stamp-active { color: var(--rp-red); }
-  .rp-stamp-maintenance { color: var(--rp-ink-dim); }
+  .rp-stamp {
+    position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--rp-mono); font-size: 10px; letter-spacing: 0.02em; padding: 3px 9px 3px 7px;
+    border-radius: 20px; border: 1px solid currentColor; background: var(--rp-neutral-tint);
+  }
+  .rp-stamp::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .rp-stamp-inline { position: static; display: inline-flex; }
+  .rp-stamp-available { color: var(--rp-teal); background: var(--rp-teal-tint); }
+  .rp-stamp-active { color: var(--rp-red); background: var(--rp-red-tint); box-shadow: 0 0 12px -2px var(--rp-red-glow); }
+  .rp-stamp-active::before { box-shadow: 0 0 6px currentColor; }
+  .rp-stamp-maintenance { color: var(--rp-ink-dim); background: var(--rp-neutral-tint); }
 
-  .rp-btn { display: inline-flex; align-items: center; gap: 6px; justify-content: center; font-family: var(--rp-sans); font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 4px; border: 1px solid transparent; cursor: pointer; width: 100%; }
-  .rp-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .rp-btn-start { background: var(--rp-teal); color: #F4F1E4; }
-  .rp-btn-stop { background: var(--rp-red); color: #F4F1E4; }
-  .rp-btn-ghost { background: transparent; border-color: var(--rp-line); color: var(--rp-ink); width: auto; }
+  .rp-btn { display: inline-flex; align-items: center; gap: 6px; justify-content: center; font-family: var(--rp-sans); font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; width: 100%; transition: transform .12s ease, box-shadow .12s ease, filter .12s ease; }
+  .rp-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .rp-btn-start { background: var(--rp-teal); color: var(--rp-btn-text); box-shadow: 0 6px 16px -9px var(--rp-elevation-shadow); }
+  .rp-btn-start:hover:not(:disabled) { filter: brightness(1.08); }
+  .rp-btn-stop { background: var(--rp-red); color: var(--rp-btn-text); box-shadow: 0 6px 16px -9px var(--rp-elevation-shadow); }
+  .rp-btn-stop:hover:not(:disabled) { filter: brightness(1.08); }
+  .rp-btn-ghost { background: transparent; border-color: var(--rp-border-strong); color: var(--rp-ink); width: auto; }
+  .rp-btn-ghost:hover:not(:disabled) { background: var(--rp-hover-tint); }
   .rp-head-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
   .rp-page-head-row .rp-btn { width: auto; }
 
-  .rp-table-wrap { overflow-x: auto; border: 1px solid var(--rp-line); border-radius: 4px; }
+  .rp-table-wrap { overflow-x: auto; border: 1px solid var(--rp-border); border-radius: 10px; background: var(--rp-surface); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: var(--rp-panel-shadow); }
   .rp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .rp-table th { text-align: left; font-weight: 600; font-size: 11.5px; color: var(--rp-ink-dim); padding: 10px 14px; border-bottom: 1px solid var(--rp-line); background: var(--rp-paper-2); white-space: nowrap; }
-  .rp-table td { padding: 10px 14px; border-bottom: 1px solid var(--rp-line); }
+  .rp-table th { text-align: left; font-weight: 600; font-size: 11.5px; color: var(--rp-ink-dim); padding: 10px 14px; border-bottom: 1px solid var(--rp-border); background: var(--rp-th-bg); white-space: nowrap; }
+  .rp-table td { padding: 10px 14px; border-bottom: 1px solid var(--rp-border); color: var(--rp-ink); }
   .rp-table tr:last-child td { border-bottom: none; }
   .rp-dim { color: var(--rp-ink-dim); font-size: 11px; }
   .rp-row-actions { display: flex; gap: 4px; }
 
-  .rp-icon-btn { background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 5px; cursor: pointer; color: var(--rp-ink-dim); display: inline-flex; }
-  .rp-icon-btn:hover { background: rgba(35,43,61,0.08); color: var(--rp-ink); }
+  .rp-icon-btn { background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 5px; cursor: pointer; color: var(--rp-ink-dim); display: inline-flex; }
+  .rp-icon-btn:hover { background: var(--rp-hover-tint); color: var(--rp-ink); }
   .rp-icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .rp-icon-danger:hover { color: var(--rp-red); }
 
-  .rp-cond { font-size: 12px; padding: 2px 8px; border-radius: 3px; }
-  .rp-cond-Baik { color: var(--rp-teal); }
-  .rp-cond-Rusak { color: var(--rp-red); }
-  .rp-cond-Perlu-cek { color: var(--rp-amber); }
+  .rp-cond { font-size: 12px; padding: 2px 8px; border-radius: 20px; }
+  .rp-cond-Baik { color: var(--rp-teal); background: var(--rp-teal-tint); }
+  .rp-cond-Rusak { color: var(--rp-red); background: var(--rp-red-tint); }
+  .rp-cond-Perlu-cek { color: var(--rp-amber); background: var(--rp-amber-tint); }
 
-  .rp-search { display: flex; align-items: center; gap: 6px; border: 1px solid var(--rp-line); border-radius: 4px; padding: 6px 10px; background: var(--rp-paper-2); color: var(--rp-ink-dim); }
+  .rp-search { display: flex; align-items: center; gap: 6px; border: 1px solid var(--rp-border); border-radius: 8px; padding: 6px 10px; background: var(--rp-surface); color: var(--rp-ink-dim); }
   .rp-search input { border: none; background: transparent; font-size: 13px; color: var(--rp-ink); outline: none; width: 180px; font-family: var(--rp-sans); }
   .rp-search-wide { margin-bottom: 14px; width: fit-content; }
 
   .rp-empty { display: flex; align-items: center; gap: 8px; color: var(--rp-ink-dim); font-size: 13px; padding: 18px; justify-content: center; }
 
-  .rp-modal-backdrop { position: fixed; inset: 0; background: rgba(35,43,61,0.35); display: flex; align-items: center; justify-content: center; z-index: 50; }
-  .rp-modal { background: var(--rp-paper); border: 1px solid var(--rp-line); border-radius: 6px; width: 360px; max-width: 92vw; max-height: 86vh; overflow-y: auto; }
-  .rp-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--rp-line); }
-  .rp-modal-head h3 { font-family: var(--rp-serif); font-size: 15px; font-weight: 600; margin: 0; }
+  .rp-modal-backdrop { position: fixed; inset: 0; background: var(--rp-overlay); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 50; }
+  .rp-modal { background: var(--rp-surface-solid); border: 1px solid var(--rp-border-strong); border-radius: 14px; width: 360px; max-width: 92vw; max-height: 86vh; overflow-y: auto; box-shadow: 0 24px 60px -20px var(--rp-elevation-shadow); }
+  .rp-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--rp-border); }
+  .rp-modal-head h3 { font-family: var(--rp-serif); font-size: 15px; font-weight: 600; margin: 0; color: var(--rp-ink); }
   .rp-modal-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
   .rp-modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
   .rp-modal-foot .rp-btn { width: auto; white-space: nowrap; }
 
   .rp-field { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--rp-ink-dim); }
-  .rp-field input, .rp-field select { font-family: var(--rp-sans); font-size: 13.5px; color: var(--rp-ink); border: 1px solid var(--rp-line); border-radius: 4px; padding: 8px 10px; background: #fff; }
+  .rp-field input, .rp-field select { font-family: var(--rp-sans); font-size: 13.5px; color: var(--rp-ink); border: 1px solid var(--rp-border); border-radius: 8px; padding: 8px 10px; background: var(--rp-input-bg); }
+  .rp-field input:focus, .rp-field select:focus { outline: none; border-color: var(--rp-navy); box-shadow: 0 0 0 3px var(--rp-focus-ring); }
   .rp-field-row { display: flex; gap: 8px; flex-wrap: wrap; }
-  .rp-pill { flex: 1; min-width: 62px; padding: 7px 4px; border-radius: 4px; border: 1px solid var(--rp-line); background: transparent; color: var(--rp-ink-dim); font-size: 12.5px; cursor: pointer; white-space: nowrap; }
-  .rp-pill.is-on { background: var(--rp-ink); color: var(--rp-paper); border-color: var(--rp-ink); }
+  .rp-pill { flex: 1; min-width: 62px; padding: 7px 4px; border-radius: 8px; border: 1px solid var(--rp-border); background: transparent; color: var(--rp-ink-dim); font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+  .rp-pill.is-on { background: var(--rp-chip-bg); color: var(--rp-chip-text); border-color: transparent; }
 
-  .rp-receipt { border: 1px dashed var(--rp-line); border-radius: 4px; padding: 12px 14px; }
+  .rp-receipt { border: 1px dashed var(--rp-border-strong); border-radius: 10px; padding: 12px 14px; }
   .rp-receipt-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
-  .rp-receipt-line { border-top: 1px dashed var(--rp-line); margin: 4px 0; }
-  .rp-receipt-total { font-size: 15px; }
+  .rp-receipt-line { border-top: 1px dashed var(--rp-border-strong); margin: 4px 0; }
+  .rp-receipt-total { font-size: 15px; font-family: var(--rp-mono); }
 
-  .rp-chart-box { border: 1px solid var(--rp-line); border-radius: 4px; padding: 14px; background: var(--rp-paper-2); }
+  .rp-chart-box { border: 1px solid var(--rp-border); border-radius: 10px; padding: 14px; background: var(--rp-surface); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); box-shadow: var(--rp-panel-shadow), inset 0 1px 0 var(--rp-panel-highlight); }
   .rp-chart-legend { display: flex; gap: 18px; margin-top: 8px; font-size: 12px; color: var(--rp-ink-dim); flex-wrap: wrap; }
   .rp-legend-item { display: flex; align-items: center; gap: 6px; }
   .rp-legend-swatch { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
-  .rp-delta-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 3px; margin-top: 4px; }
-  .rp-delta-up { color: var(--rp-teal); background: rgba(47,111,98,0.12); }
-  .rp-delta-down { color: var(--rp-red); background: rgba(178,58,46,0.12); }
-  .rp-delta-flat { color: var(--rp-ink-dim); background: rgba(107,102,86,0.12); }
+  .rp-delta-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; margin-top: 4px; }
+  .rp-delta-up { color: var(--rp-teal); background: var(--rp-teal-tint); }
+  .rp-delta-down { color: var(--rp-red); background: var(--rp-red-tint); }
+  .rp-delta-flat { color: var(--rp-ink-dim); background: var(--rp-neutral-tint); }
 
-  .rp-toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--rp-ink); color: var(--rp-paper); padding: 10px 18px; border-radius: 4px; font-size: 13px; z-index: 60; }
+  .rp-toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--rp-surface-solid); border: 1px solid var(--rp-border-strong); color: var(--rp-ink); padding: 10px 18px; border-radius: 10px; font-size: 13px; z-index: 60; box-shadow: 0 12px 30px -10px var(--rp-elevation-shadow); }
 
-  .rp-loading-screen { display: flex; align-items: center; justify-content: center; height: 100vh; width: 100%; font-family: var(--rp-serif); font-size: 18px; color: var(--rp-ink-dim); }
+  .rp-theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 55;
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid var(--rp-border-strong); background: var(--rp-surface-solid);
+    color: var(--rp-ink); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 8px 20px -8px var(--rp-elevation-shadow);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    transition: transform .15s ease, background .15s ease;
+  }
+  .rp-theme-toggle:hover { background: var(--rp-surface-2); transform: scale(1.06); }
+  .rp-theme-toggle svg { width: 18px; height: 18px; }
+
+  .rp-loading-screen { display: flex; align-items: center; justify-content: center; height: 100vh; width: 100%; font-family: var(--rp-serif); font-size: 16px; color: var(--rp-ink-dim); }
 
   @media (max-width: 720px) {
     #root { flex-direction: column; }
     .rp-sidebar {
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
       width: 100%; flex-direction: row; align-items: stretch;
-      overflow-x: auto; border-right: none; border-top: 1px solid var(--rp-line);
+      overflow-x: auto; border-right: none; border-top: 1px solid var(--rp-border);
       padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
     }
     .rp-brand { display: none; }
     .rp-nav { flex-direction: row; flex: 1; gap: 0; justify-content: space-around; }
     .rp-nav-item {
       flex-direction: column; gap: 3px; align-items: center; justify-content: center;
-      width: auto; flex: 1; padding: 6px 2px; border-radius: 6px;
+      width: auto; flex: 1; padding: 6px 2px; border-radius: 8px;
     }
     .rp-nav-label { font-size: 10px; line-height: 1.1; white-space: nowrap; }
     .rp-sidebar-foot { display: none; }
-    .rp-main { height: auto; padding-bottom: calc(76px + env(safe-area-inset-bottom)); padding-left: 16px; padding-right: 16px; }
+    .rp-main { height: auto; padding-top: 64px; padding-bottom: calc(76px + env(safe-area-inset-bottom)); padding-left: 16px; padding-right: 16px; }
+    .rp-theme-toggle { top: 12px; right: 12px; width: 36px; height: 36px; }
+    .rp-theme-toggle svg { width: 16px; height: 16px; }
 
     /* 4 card jadi 2 kolom sebaris di mobile (dashboard & laporan) */
     .rp-stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -182,18 +325,478 @@
     .rp-btn { font-size: 12px; padding: 7px 10px; }
     .rp-pill { font-size: 11.5px; padding: 6px 4px; }
     .rp-unit-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-    .rp-card { padding: 12px; }
+    .rp-card { padding: 14px 12px 12px; }
     .rp-unit-name { font-size: 13.5px; padding-right: 44px; }
-    .rp-stamp { top: 8px; right: 8px; font-size: 8.5px; padding: 2px 6px; letter-spacing: 0; white-space: nowrap; }
+    .rp-stamp { top: 8px; right: 8px; font-size: 8.5px; padding: 2px 7px 2px 6px; letter-spacing: 0; white-space: nowrap; }
     .rp-timer { font-size: 18px; }
     .rp-modal { width: 320px; }
   }
+
+
+/* =========================================================
+   PREMIUM UI OVERRIDE — Rental PS
+   Fokus: premium / modern / clean / operator-friendly
+   Tidak mengubah business logic atau API.
+========================================================= */
+/* Page atmosphere — warm paper/ink tint instead of the old blue-violet glow */
+html,body{
+  background-color:var(--rp-page-bg);
+  background-image:
+    radial-gradient(circle at 78% 8%,rgba(var(--rp-accent-rgb),.07),transparent 28%),
+    radial-gradient(circle at 15% 80%,rgba(198,133,46,.05),transparent 26%);
+  background-size:auto;
+}
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(120deg,transparent 0%,var(--rp-panel-highlight) 48%,transparent 100%);
+  z-index:-1;
+}
+
+/* Sidebar */
+.rp-sidebar{
+  width:248px;
+  padding:20px 14px;
+  border-right:1px solid var(--rp-border);
+  box-shadow:18px 0 60px -50px rgba(0,0,0,.8);
+}
+.rp-brand{
+  padding:4px 8px 18px;
+  margin-bottom:16px;
+  border-bottom:1px solid var(--rp-border);
+}
+.rp-brand-mark{
+  width:40px;height:40px;border-radius:12px;
+  font-size:12px;
+  box-shadow:0 10px 22px -10px var(--rp-elevation-shadow),inset 0 1px 0 var(--rp-panel-highlight);
+}
+.rp-brand-input{
+  font-size:15px;
+  letter-spacing:-.02em;
+}
+.rp-brand-sub{
+  margin-top:2px;
+  letter-spacing:.02em;
+}
+.rp-nav{gap:5px}
+.rp-nav-item{
+  position:relative;
+  padding:11px 12px;
+  border-radius:11px;
+  font-size:13px;
+}
+.rp-nav-item:hover{
+  transform:translateX(2px);
+}
+.rp-nav-item.is-active{
+  box-shadow:0 8px 18px -10px var(--rp-elevation-shadow);
+}
+.rp-nav-item.is-active:after{
+  content:"";
+  position:absolute;
+  right:7px;
+  width:4px;height:18px;
+  border-radius:99px;
+  background:var(--rp-chip-text);
+  opacity:.55;
+}
+.rp-sidebar-foot{
+  padding:15px 8px 0;
+}
+.rp-stat-mini{
+  padding:8px 10px;
+  border-radius:10px;
+  background:rgba(255,255,255,.025);
+  margin-bottom:4px;
+}
+[data-theme="light"] .rp-stat-mini{background:rgba(31,43,77,.035)}
+.rp-refresh-btn{
+  width:100%;
+  padding:8px 10px;
+  border-radius:9px;
+  transition:.15s ease;
+}
+.rp-refresh-btn:hover{background:var(--rp-hover-tint);transform:translateY(-1px)}
+
+/* Main */
+.rp-main{
+  padding:34px 40px 44px;
+}
+.rp-page{
+  max-width:1180px;
+  margin:0 auto;
+}
+.rp-page-head{
+  margin-bottom:24px;
+}
+.rp-page-head h1{
+  font-size:27px;
+  font-weight:700;
+  letter-spacing:-.035em;
+}
+.rp-sub{
+  font-size:12.5px;
+  line-height:1.55;
+}
+
+/* KPI cards */
+.rp-stat-row{
+  gap:14px;
+}
+.rp-stat-card{
+  position:relative;
+  overflow:hidden;
+  border-radius:15px;
+  padding:17px 18px;
+  min-height:86px;
+  box-shadow:var(--rp-panel-shadow),inset 0 1px 0 var(--rp-panel-highlight);
+}
+.rp-stat-card:before{
+  content:"";
+  position:absolute;
+  top:0;left:0;right:0;
+  height:2px;
+  background:linear-gradient(90deg,rgba(var(--rp-accent-rgb),.75),rgba(198,133,46,.4));
+  opacity:.85;
+}
+.rp-stat-card:after{
+  content:"";
+  position:absolute;
+  width:90px;height:90px;
+  right:-35px;bottom:-55px;
+  border-radius:50%;
+  background:rgba(var(--rp-accent-rgb),.08);
+  filter:blur(12px);
+}
+.rp-stat-label{
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:.075em;
+  font-weight:600;
+}
+.rp-stat-value{
+  font-size:21px;
+  font-weight:600;
+  letter-spacing:-.025em;
+}
+
+/* Section heading */
+.rp-ruled-head{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  color:var(--rp-ink-dim);
+  border-bottom:0;
+  margin:28px 0 13px;
+}
+.rp-ruled-head:after{
+  content:"";
+  height:1px;
+  flex:1;
+  background:var(--rp-border);
+}
+
+/* Unit cards */
+.rp-unit-grid{
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:15px;
+}
+.rp-card{
+  border-radius:15px;
+  padding:19px 17px 16px;
+  border:1px solid var(--rp-border);
+  border-top:1px solid var(--rp-border);
+  background-image:
+    radial-gradient(circle at 90% 0%,rgba(var(--rp-accent-rgb),.06),transparent 34%),
+    linear-gradient(180deg,var(--rp-panel-highlight),transparent 65%);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.rp-card:before{height:2px}
+.rp-card:hover{
+  transform:translateY(-3px);
+  border-color:var(--rp-border-strong);
+  box-shadow:0 20px 40px -30px var(--rp-elevation-shadow),inset 0 1px 0 var(--rp-panel-highlight);
+}
+.rp-unit-name{
+  font-size:15.5px;
+  font-weight:650;
+  letter-spacing:-.015em;
+}
+.rp-unit-rate{
+  font-size:11px;
+  opacity:.9;
+}
+.rp-timer{
+  font-size:24px;
+  letter-spacing:-.035em;
+}
+.rp-running-cost{
+  font-size:12px;
+}
+.rp-stamp{
+  font-size:9px;
+  font-weight:600;
+  letter-spacing:.045em;
+  text-transform:uppercase;
+  padding:4px 9px 4px 7px;
+  backdrop-filter:blur(8px);
+}
+.rp-card-actions{gap:7px}
+.rp-btn{
+  border-radius:10px;
+  min-height:36px;
+  padding:8px 13px;
+  transition:transform .15s ease,box-shadow .15s ease,filter .15s ease,background .15s ease;
+}
+.rp-btn:hover:not(:disabled){
+  transform:translateY(-1px);
+}
+.rp-btn-start{
+  box-shadow:0 10px 22px -14px var(--rp-elevation-shadow);
+}
+.rp-btn-stop{
+  box-shadow:0 10px 22px -14px var(--rp-elevation-shadow);
+}
+.rp-btn-ghost{
+  background:rgba(255,255,255,.025);
+  backdrop-filter:blur(8px);
+}
+[data-theme="light"] .rp-btn-ghost{background:rgba(31,43,77,.025)}
+
+/* Tables */
+.rp-table-wrap{
+  border-radius:14px;
+  box-shadow:var(--rp-panel-shadow),inset 0 1px 0 var(--rp-panel-highlight);
+}
+.rp-table{
+  font-size:12.5px;
+}
+.rp-table th{
+  padding:12px 15px;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.065em;
+}
+.rp-table td{
+  padding:12px 15px;
+}
+.rp-table tbody tr{
+  transition:background .12s ease;
+}
+.rp-table tbody tr:hover{
+  background:var(--rp-hover-tint);
+}
+
+/* Search */
+.rp-search{
+  border-radius:10px;
+  padding:7px 11px;
+  background:var(--rp-surface);
+  box-shadow:inset 0 1px 0 var(--rp-panel-highlight);
+}
+.rp-search:focus-within{
+  border-color:rgba(var(--rp-accent-rgb),.5);
+  box-shadow:0 0 0 3px var(--rp-focus-ring);
+}
+.rp-search input{font-size:12.5px}
+
+/* Forms / modals */
+.rp-modal-backdrop{
+  background:var(--rp-overlay);
+  backdrop-filter:blur(8px);
+}
+.rp-modal{
+  width:410px;
+  border-radius:18px;
+  box-shadow:0 30px 70px -35px var(--rp-elevation-shadow),inset 0 1px 0 var(--rp-panel-highlight);
+}
+.rp-modal-head{
+  padding:16px 18px;
+}
+.rp-modal-head h3{
+  font-size:15.5px;
+  letter-spacing:-.015em;
+}
+.rp-modal-body{
+  padding:18px;
+  gap:13px;
+}
+.rp-field{gap:6px;font-size:11.5px;font-weight:500}
+.rp-field input,.rp-field select{
+  min-height:40px;
+  border-radius:10px;
+  padding:9px 11px;
+  transition:.15s ease;
+}
+.rp-field input:focus,.rp-field select:focus{
+  border-color:rgba(var(--rp-accent-rgb),.6);
+  box-shadow:0 0 0 3px var(--rp-focus-ring);
+}
+.rp-pill{
+  border-radius:10px;
+  min-height:36px;
+  transition:.15s ease;
+}
+.rp-pill:hover{background:var(--rp-hover-tint);color:var(--rp-ink)}
+.rp-pill.is-on{
+  box-shadow:0 8px 16px -12px var(--rp-elevation-shadow);
+}
+
+/* Receipt */
+.rp-receipt{
+  border:1px solid var(--rp-border);
+  border-radius:13px;
+  padding:13px 15px;
+  background:linear-gradient(145deg,rgba(var(--rp-accent-rgb),.05),rgba(198,133,46,.03));
+}
+.rp-receipt-total{
+  font-size:17px;
+  padding-top:7px;
+}
+.rp-receipt-line{
+  border-color:var(--rp-border);
+  margin:7px 0;
+}
+
+/* Report chart */
+.rp-chart-box{
+  border-radius:15px;
+  padding:16px;
+}
+.rp-delta-badge{
+  padding:3px 8px;
+  font-size:10.5px;
+}
+
+/* Toast */
+.rp-toast{
+  bottom:24px;
+  border-radius:12px;
+  padding:11px 17px;
+  box-shadow:0 18px 45px -18px rgba(0,0,0,.9);
+  backdrop-filter:blur(14px);
+}
+
+/* Theme toggle */
+.rp-theme-toggle{
+  top:20px;right:22px;
+  width:38px;height:38px;
+  border-radius:11px;
+  box-shadow:0 12px 28px -16px rgba(0,0,0,.8);
+  transition:.16s ease;
+}
+.rp-theme-toggle:hover{
+  transform:translateY(-2px) scale(1.02);
+}
+
+/* Mobile */
+@media (max-width:720px){
+  .rp-nav{ gap:0; }
+  .rp-sidebar{
+    width:100%;
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    background:var(--rp-surface-solid);
+    backdrop-filter:none;
+    border-right:none;
+    box-shadow:none;
+  }
+  .rp-nav-item{
+    min-height:52px;
+    padding:6px 2px;
+    border-radius:6px;
+    font-size:13.5px;
+  }
+  .rp-nav-item.is-active:after{
+    display:none;
+  }
+  .rp-main{
+    padding:66px 14px calc(82px + env(safe-area-inset-bottom));
+  }
+  .rp-page-head h1{font-size:22px}
+  .rp-page-head{margin-bottom:18px}
+  .rp-stat-row{gap:9px}
+  .rp-stat-card{
+    min-height:78px;
+    border-radius:13px;
+    padding:12px 13px;
+  }
+  .rp-stat-value{font-size:16px}
+  .rp-unit-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+  }
+  .rp-card{
+    border-radius:13px;
+    padding:14px 11px 11px;
+  }
+  .rp-unit-name{font-size:13px}
+  .rp-unit-rate{font-size:10px}
+  .rp-timer{font-size:17px}
+  .rp-btn{min-height:34px;padding:7px 9px;border-radius:9px}
+  .rp-table-wrap{border-radius:12px}
+  .rp-modal{
+    width:min(410px,calc(100vw - 24px));
+    border-radius:16px;
+  }
+}
+@media (max-width:390px){
+  .rp-unit-grid{grid-template-columns:1fr}
+}
+
+
+/* Premium loading */
+.rp-loading-screen{letter-spacing:.01em}
+.rp-loading-screen:after{
+  content:"";
+  width:6px;height:6px;
+  margin-left:8px;
+  border-radius:50%;
+  display:inline-block;
+  background:currentColor;
+  animation:rpPulse 1s ease-in-out infinite;
+}
+@keyframes rpPulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+
+/* ===== Sudut poligon (chamfered corners) — kesan lempeng logam/ledger premium ===== */
+:root { --rp-cut: 16px; --rp-cut-sm: 10px; }
+.rp-card,
+.rp-stat-card,
+.rp-chart-box,
+.rp-table-wrap {
+  clip-path: polygon(
+    var(--rp-cut) 0%, calc(100% - var(--rp-cut)) 0%,
+    100% var(--rp-cut), 100% calc(100% - var(--rp-cut)),
+    calc(100% - var(--rp-cut)) 100%, var(--rp-cut) 100%,
+    0% calc(100% - var(--rp-cut)), 0% var(--rp-cut)
+  );
+  border-radius: 0 !important;
+}
+.rp-card::before { border-radius: 0; }
+.rp-modal {
+  clip-path: polygon(
+    var(--rp-cut-sm) 0%, calc(100% - var(--rp-cut-sm)) 0%,
+    100% var(--rp-cut-sm), 100% calc(100% - var(--rp-cut-sm)),
+    calc(100% - var(--rp-cut-sm)) 100%, var(--rp-cut-sm) 100%,
+    0% calc(100% - var(--rp-cut-sm)), 0% var(--rp-cut-sm)
+  );
+  border-radius: 0 !important;
+}
+@media (max-width: 720px) {
+  :root { --rp-cut: var(--rp-cut-sm); }
+}
+
 </style>
 </head>
 <body>
-<div id="root"><div class="rp-loading-screen">Menyiapkan System…</div></div>
+<div id="root"><div class="rp-loading-screen">Menyiapkan sistem…</div></div>
 <div id="modal-root"></div>
 <div id="toast" class="rp-toast" style="display:none;"></div>
+<button id="theme-toggle" class="rp-theme-toggle" onclick="toggleTheme()" title="Ganti mode terang/gelap" aria-label="Ganti mode terang/gelap"></button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -246,7 +849,28 @@ const ICONS = {
   users: '<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
   box: '<path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
   chart: '<path d="M4 20V10M12 20V4M20 20v-7"/><path d="M2 20h20"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
 };
+function getTheme() {
+  try { return localStorage.getItem("rp_theme") || "dark"; } catch (e) { return "dark"; }
+}
+function renderThemeToggle() {
+  const btn = document.getElementById("theme-toggle");
+  if (!btn) return;
+  const t = getTheme();
+  btn.innerHTML = icon(t === "dark" ? "sun" : "moon", 18);
+}
+function setTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem("rp_theme", t); } catch (e) {}
+  renderThemeToggle();
+}
+function toggleTheme() {
+  setTheme(getTheme() === "dark" ? "light" : "dark");
+}
+renderThemeToggle();
+
 function icon(name, size) {
   size = size || 14;
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">${ICONS[name] || ""}</svg>`;
@@ -399,13 +1023,18 @@ function normalize(raw) {
 
   const inventory = (raw.Inventory || []).map(i => ({ ...i, lastCheck: Number(i.lastCheck) || Date.now() }));
 
-  return { settings: { businessName, defaultRate }, units, activeRentals, transactions, members, inventory };
+  const queue = (raw.Queue || []).map(q => ({
+    id: q.id, customerName: q.customerName || "Tamu", phone: q.phone || "",
+    unitId: q.unitId || null, note: q.note || "", requestedAt: Number(q.requestedAt) || Date.now(),
+  }));
+
+  return { settings: { businessName, defaultRate }, units, activeRentals, transactions, members, inventory, queue };
 }
 
 /* =========================================================
    State
 ========================================================= */
-let state = { settings: { businessName: "Rental PS Saya", defaultRate: 5000 }, units: [], activeRentals: {}, transactions: [], members: [], inventory: [] };
+let state = { settings: { businessName: "Rental PS Saya", defaultRate: 5000 }, units: [], activeRentals: {}, transactions: [], members: [], inventory: [], queue: [] };
 let currentTab = "dashboard";
 let ready = false;
 
@@ -424,13 +1053,15 @@ function applyRemote(raw) {
   const ob = getOutbox();
   const skipUnits = !!ob.Units, skipActive = !!ob.ActiveRentals,
         skipTx = !!ob.Transactions, skipMembers = !!ob.Members,
-        skipInv = !!ob.Inventory, skipSettings = !!ob.Settings;
+        skipInv = !!ob.Inventory, skipSettings = !!ob.Settings,
+        skipQueue = !!ob.Queue;
   if (!skipSettings) state.settings = incoming.settings;
   if (!skipUnits) state.units = incoming.units;
   if (!skipActive) state.activeRentals = incoming.activeRentals;
   if (!skipTx) state.transactions = incoming.transactions;
   if (!skipMembers) state.members = incoming.members;
   if (!skipInv) state.inventory = incoming.inventory;
+  if (!skipQueue) state.queue = incoming.queue;
   saveCache();
 }
 
@@ -440,6 +1071,7 @@ async function loadAll() {
   const cached = loadCache();
   if (cached) {
     state = cached;
+    if (!Array.isArray(state.queue)) state.queue = [];
     ready = true;
     renderAll();
   }
@@ -484,6 +1116,7 @@ function persistTransactions() { apiSave("Transactions", state.transactions); }
 function persistMembers() { apiSave("Members", state.members); }
 function persistInventory() { apiSave("Inventory", state.inventory); }
 function persistSettings() { apiSave("Settings", [state.settings]); }
+function persistQueue() { apiSave("Queue", state.queue); }
 
 /* =========================================================
    Business logic
@@ -544,6 +1177,7 @@ function finishRental(unitId, payment, discount, frozenMs) {
   persistTransactions(); persistActive(); persistUnits();
   if (session.memberId) persistMembers();
   flash(`Sewa ${unit.name} selesai — ${rupiah(amount)}`);
+  maybeNotifyQueueForUnit(unitId, unit.name);
 }
 
 function upsertUnit(unit) {
@@ -580,6 +1214,220 @@ function upsertInventory(item) {
 function removeInventory(id) { state.inventory = state.inventory.filter(i => i.id !== id); renderAll(); persistInventory(); }
 
 function saveBusinessName(v) { state.settings.businessName = v; persistSettings(); }
+
+/* =========================================================
+   Antrian sewa
+========================================================= */
+function addToQueue(customerName, phone, unitId, note) {
+  state.queue.push({ id: uid(), customerName: customerName || "Tamu", phone: phone || "", unitId: unitId || null, note: note || "", requestedAt: Date.now() });
+  persistQueue();
+  renderAll();
+  openQueueModal();
+  flash(`${customerName || "Tamu"} ditambahkan ke antrian.`);
+}
+function removeFromQueue(id) {
+  const q = state.queue.find(x => x.id === id);
+  state.queue = state.queue.filter(x => x.id !== id);
+  persistQueue();
+  renderAll();
+  if (document.getElementById("queue-name")) openQueueModal(); else closeModal();
+  flash(q ? `Antrian ${q.customerName} dibatalkan.` : "Antrian dibatalkan.");
+}
+function submitQueue() {
+  const nameEl = document.getElementById("queue-name");
+  if (!nameEl) return;
+  const name = nameEl.value.trim();
+  if (!name) { flash("Nama penyewa wajib diisi."); return; }
+  const phone = document.getElementById("queue-phone").value;
+  const unitId = document.getElementById("queue-unit").value || null;
+  const note = document.getElementById("queue-note").value;
+  addToQueue(name, phone, unitId, note);
+}
+function assignQueueEntry(queueId) {
+  const q = state.queue.find(x => x.id === queueId);
+  if (!q) return;
+  const sel = document.getElementById("assign-sel-" + queueId);
+  const unitId = sel ? sel.value : "";
+  if (!unitId) { flash("Pilih unit yang tersedia dulu."); return; }
+  state.queue = state.queue.filter(x => x.id !== queueId);
+  persistQueue();
+  renderAll();
+  openStartModal(unitId);
+  const nameInput = document.getElementById("start-name");
+  if (nameInput) nameInput.value = q.customerName;
+  if (q.note) { const noteInput = document.getElementById("start-note"); if (noteInput) noteInput.value = q.note; }
+}
+function maybeNotifyQueueForUnit(unitId, unitName) {
+  const waiting = state.queue.filter(q => q.unitId === unitId || !q.unitId);
+  if (!waiting.length) return;
+  setTimeout(() => {
+    flash(`${waiting[0].customerName} sedang mengantre — ${unitName} baru saja kosong.`);
+  }, 700);
+}
+function openQueueModal(prefUnitId) {
+  const unitOptions = `<option value="">Unit apapun (fleksibel)</option>` + state.units.map(u => `<option value="${u.id}" ${prefUnitId===u.id?"selected":""}>${esc(u.name)}</option>`).join("");
+  const availableUnits = state.units.filter(u => u.status === "available");
+  const rows = state.queue.map(q => {
+    const unitName = q.unitId ? ((state.units.find(u => u.id === q.unitId) || {}).name || "-") : "Unit apapun";
+    const assignOptions = availableUnits.map(u => `<option value="${u.id}" ${u.id===q.unitId?"selected":""}>${esc(u.name)}</option>`).join("");
+    return `<tr>
+      <td>${esc(q.customerName)}${q.note ? `<div class="rp-dim">${esc(q.note)}</div>` : ""}</td>
+      <td>${esc(q.phone || "-")}</td>
+      <td>${esc(unitName)}</td>
+      <td class="rp-dim">${fmtTimeID(q.requestedAt)}</td>
+      <td class="rp-row-actions">
+        ${availableUnits.length ? `<select id="assign-sel-${q.id}" style="font-size:11px;max-width:110px;">${assignOptions}</select>
+        <button class="rp-icon-btn" title="Mulai sewa" onclick="assignQueueEntry('${q.id}')">${icon("play",15)}</button>` : `<span class="rp-dim">Belum ada unit kosong</span>`}
+        <button class="rp-icon-btn rp-icon-danger" title="Batalkan" onclick="removeFromQueue('${q.id}')">${icon("trash",15)}</button>
+      </td>
+    </tr>`;
+  }).join("");
+  openModal(modalShell("Antrian sewa", `
+    <div class="rp-ruled-head" style="margin-top:0;">Tambah ke antrian</div>
+    <label class="rp-field"><span>Nama penyewa</span><input id="queue-name" placeholder="Cth: Budi" /></label>
+    <label class="rp-field"><span>No. HP (opsional)</span><input id="queue-phone" placeholder="08xx" /></label>
+    <label class="rp-field"><span>Unit yang diinginkan</span><select id="queue-unit">${unitOptions}</select></label>
+    <label class="rp-field"><span>Catatan (opsional)</span><input id="queue-note" placeholder="Cth: bawa 2 stik" /></label>
+    <button class="rp-btn rp-btn-start" onclick="submitQueue()">${icon("plus",14)} Tambahkan ke antrian</button>
+    <div class="rp-ruled-head">Daftar antrian (${state.queue.length})</div>
+    <div class="rp-table-wrap"><table class="rp-table">
+      <thead><tr><th>Nama</th><th>HP</th><th>Unit diminta</th><th>Waktu</th><th></th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="5">${emptyState("Belum ada antrian.")}</td></tr>`}</tbody>
+    </table></div>
+  `));
+}
+
+/* =========================================================
+   Detail modal — Dasbor & Laporan (klik kartu/chart)
+========================================================= */
+function openDashTxModal() {
+  const todayStr = new Date().toDateString();
+  const todayTx = state.transactions.filter(t => new Date(t.end).toDateString() === todayStr);
+  const total = todayTx.reduce((a,t) => a+t.amount, 0);
+  const rows = todayTx.map(t => `<tr><td>${fmtTimeID(t.end)}</td><td>${esc(t.unitName)}</td><td>${esc(t.customerName)}</td><td class="rp-mono">${t.minutes} mnt</td><td class="rp-mono">${rupiah(t.amount)}</td></tr>`).join("");
+  openModal(modalShell("Transaksi hari ini", `
+    <p class="rp-sub">${todayTx.length} transaksi · total ${rupiah(total)}</p>
+    <div class="rp-table-wrap"><table class="rp-table">
+      <thead><tr><th>Jam</th><th>Unit</th><th>Penyewa</th><th>Durasi</th><th>Total</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="5">${emptyState("Belum ada transaksi hari ini.")}</td></tr>`}</tbody>
+    </table></div>
+  `));
+}
+function openDashActiveUnitsModal() {
+  const rows = state.units.filter(u => u.status === "active" && state.activeRentals[u.id]).map(u => {
+    const s = state.activeRentals[u.id];
+    const elapsed = Date.now() - s.startTime;
+    return `<tr><td>${esc(u.name)}</td><td>${esc(s.customerName)}</td><td class="rp-mono">${fmtHMS(elapsed)}</td><td>${esc(s.note || "-")}</td></tr>`;
+  }).join("");
+  openModal(modalShell("Unit sedang disewa", `
+    <div class="rp-table-wrap"><table class="rp-table">
+      <thead><tr><th>Unit</th><th>Penyewa</th><th>Berjalan</th><th>Catatan</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="4">${emptyState("Tidak ada unit yang sedang disewa.")}</td></tr>`}</tbody>
+    </table></div>
+  `));
+}
+function openUnitDetailModal(unitId) {
+  const unit = state.units.find(u => u.id === unitId);
+  if (!unit) return;
+  const session = state.activeRentals[unitId];
+  if (!session) { openStartModal(unitId); return; }
+  const hasDuration = !!session.endTime;
+  const elapsed = Date.now() - session.startTime;
+  const remaining = hasDuration ? session.endTime - Date.now() : 0;
+  const cost = (hasDuration ? (session.endTime - session.startTime) : elapsed) / 3600000 * unit.rate;
+  const queued = state.queue.filter(q => q.unitId === unitId);
+  openModal(modalShell(`Detail sewa — ${esc(unit.name)}`, `
+    <div class="rp-receipt">
+      <div class="rp-receipt-row"><span>Penyewa</span><strong>${esc(session.customerName)}</strong></div>
+      <div class="rp-receipt-row"><span>Mulai</span><strong>${fmtTimeID(session.startTime)}</strong></div>
+      ${hasDuration
+        ? `<div class="rp-receipt-row"><span>${remaining<=0?"Waktu lewat":"Sisa waktu"}</span><strong class="rp-mono">${fmtHMS(Math.abs(remaining))}</strong></div>`
+        : `<div class="rp-receipt-row"><span>Berjalan</span><strong class="rp-mono">${fmtHMS(elapsed)}</strong></div>`}
+      <div class="rp-receipt-row"><span>Estimasi biaya</span><strong class="rp-mono">${rupiah(cost)}</strong></div>
+      ${session.note ? `<div class="rp-receipt-row"><span>Catatan</span><strong>${esc(session.note)}</strong></div>` : ""}
+    </div>
+    ${queued.length ? `<p class="rp-dim">${queued.length} orang mengantre untuk unit ini.</p>` : ""}
+    <div class="rp-modal-foot" style="justify-content:space-between;">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal(); openQueueModal('${unitId}')">${icon("users",14)} Antrian</button>
+      ${hasDuration ? `<button class="rp-btn rp-btn-ghost" onclick="openExtendModal('${unitId}')">${icon("history",14)} Perpanjang</button>` : ""}
+      <button class="rp-btn rp-btn-stop" onclick="openFinishModal('${unitId}')">${icon("stop",14)} Selesai &amp; Bayar</button>
+    </div>
+  `));
+}
+function openMaintModal(unitId) {
+  const unit = state.units.find(u => u.id === unitId);
+  if (!unit) return;
+  const queued = state.queue.filter(q => q.unitId === unitId);
+  openModal(modalShell(`Unit servis — ${esc(unit.name)}`, `
+    <p class="rp-sub">Unit ini sedang ditandai servis dan tidak bisa disewa.</p>
+    ${queued.length ? `<p class="rp-dim">${queued.length} orang mengantre untuk unit ini.</p>` : ""}
+    <div class="rp-modal-foot" style="justify-content:space-between;">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal(); openQueueModal('${unitId}')">${icon("users",14)} Antrian</button>
+      <button class="rp-btn rp-btn-start" onclick="toggleMaint('${unitId}'); closeModal();">${icon("wrench",14)} Tandai selesai servis</button>
+    </div>
+  `));
+}
+function openLaporanDetailModal(type) {
+  const tx = window._laporanExportTx || [];
+  const period = window._laporanExportPeriod || "bulan";
+  let periodLbl = "";
+  try { periodLbl = getPeriodRange(period).label; } catch (e) {}
+  let title = "Rincian", theadRow = "", bodyRows = "";
+  if (type === "duration") {
+    title = "Rincian durasi per unit";
+    const byUnitMap = {};
+    tx.forEach(t => {
+      if (!byUnitMap[t.unitName]) byUnitMap[t.unitName] = { minutes: 0, count: 0 };
+      byUnitMap[t.unitName].minutes += t.minutes;
+      byUnitMap[t.unitName].count += 1;
+    });
+    theadRow = "<tr><th>Unit</th><th>Jumlah sewa</th><th>Total durasi</th></tr>";
+    bodyRows = Object.entries(byUnitMap).sort((a,b) => b[1].minutes - a[1].minutes)
+      .map(([name,d]) => `<tr><td>${esc(name)}</td><td class="rp-mono">${d.count}</td><td class="rp-mono">${(d.minutes/60).toFixed(1)} jam</td></tr>`).join("");
+  } else {
+    title = type === "revenue" ? "Rincian pendapatan" : type === "count" ? "Rincian jumlah sewa" : "Rincian rata-rata per sewa";
+    theadRow = "<tr><th>Tanggal</th><th>Unit</th><th>Penyewa</th><th>Durasi</th><th>Total</th></tr>";
+    bodyRows = tx.map(t => `<tr><td>${fmtDateID(t.end)} <span class="rp-dim">${fmtTimeID(t.end)}</span></td><td>${esc(t.unitName)}</td><td>${esc(t.customerName)}</td><td class="rp-mono">${t.minutes} mnt</td><td class="rp-mono">${rupiah(t.amount)}</td></tr>`).join("");
+  }
+  openModal(modalShell(title, `
+    <p class="rp-sub">${esc(periodLbl)}</p>
+    <div class="rp-table-wrap"><table class="rp-table">
+      <thead>${theadRow}</thead>
+      <tbody>${bodyRows || `<tr><td colspan="5">${emptyState("Belum ada data pada periode ini.")}</td></tr>`}</tbody>
+    </table></div>
+  `));
+}
+function openTrendPointModal(period, startMs, index) {
+  const start = new Date(startMs);
+  let rangeStart, rangeEnd, label;
+  if (period === "minggu") {
+    const d = new Date(start); d.setDate(start.getDate() + index); d.setHours(0,0,0,0);
+    rangeStart = d.getTime();
+    const e = new Date(d); e.setHours(23,59,59,999);
+    rangeEnd = e.getTime();
+    label = d.toLocaleDateString("id-ID", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+  } else if (period === "tahun") {
+    const year = start.getFullYear();
+    rangeStart = new Date(year, index, 1).getTime();
+    rangeEnd = new Date(year, index + 1, 0, 23, 59, 59, 999).getTime();
+    label = new Date(year, index, 1).toLocaleDateString("id-ID", { month: "long", year: "numeric" });
+  } else {
+    const year = start.getFullYear(), month = start.getMonth();
+    rangeStart = new Date(year, month, index + 1).getTime();
+    rangeEnd = new Date(year, month, index + 1, 23, 59, 59, 999).getTime();
+    label = new Date(year, month, index + 1).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+  }
+  const tx = state.transactions.filter(t => t.end >= rangeStart && t.end <= rangeEnd);
+  const total = tx.reduce((a,t) => a+t.amount, 0);
+  const rows = tx.map(t => `<tr><td>${fmtTimeID(t.end)}</td><td>${esc(t.unitName)}</td><td>${esc(t.customerName)}</td><td class="rp-mono">${t.minutes} mnt</td><td class="rp-mono">${rupiah(t.amount)}</td></tr>`).join("");
+  openModal(modalShell(`Rincian — ${label}`, `
+    <p class="rp-sub">${tx.length} transaksi · total ${rupiah(total)}</p>
+    <div class="rp-table-wrap"><table class="rp-table">
+      <thead><tr><th>Jam</th><th>Unit</th><th>Penyewa</th><th>Durasi</th><th>Total</th></tr></thead>
+      <tbody>${rows || `<tr><td colspan="5">${emptyState("Tidak ada transaksi pada tanggal ini.")}</td></tr>`}</tbody>
+    </table></div>
+  `));
+}
 
 /* =========================================================
    Modal
@@ -932,7 +1780,7 @@ function renderAll() {
         <div class="rp-brand-mark">PS</div>
         <div class="rp-brand-text">
           <input id="brand-input" class="rp-brand-input" value="${esc(state.settings.businessName)}" />
-          <span class="rp-brand-sub">Buku Kasir Digital</span>
+          <span class="rp-brand-sub">Sistem Kasir Digital</span>
         </div>
       </div>
       <nav class="rp-nav">
@@ -940,6 +1788,7 @@ function renderAll() {
       </nav>
       <div class="rp-sidebar-foot">
         <div class="rp-stat-mini"><span>Unit aktif</span><strong>${activeCount} / ${state.units.length}</strong></div>
+        <div class="rp-stat-mini"><span>Antrian</span><strong>${state.queue.length}</strong></div>
         <div class="rp-stat-mini"><span>Pendapatan hari ini</span><strong class="rp-mono">${rupiah(todayRevenue)}</strong></div>
         <div class="rp-sync-row"><span id="sync-dot" class="rp-sync-dot"></span><span id="sync-label">Tersinkron</span></div>
         <button class="rp-refresh-btn" onclick="refreshData()">Segarkan data</button>
@@ -983,8 +1832,10 @@ function renderDashboard() {
     const runningCost = isActive
       ? (hasDuration ? (session.endTime - session.startTime) : elapsed) / 3600000 * unit.rate
       : 0;
+    const queuedForUnit = state.queue.filter(q => q.unitId === unit.id).length;
+    const cardClick = isActive ? `openUnitDetailModal('${unit.id}')` : isMaint ? `openMaintModal('${unit.id}')` : `openStartModal('${unit.id}')`;
     return `
-      <div class="rp-card rp-unit-card${isActive?" is-active":""}${isMaint?" is-maint":""}">
+      <div class="rp-card rp-unit-card rp-clickable${isActive?" is-active":""}${isMaint?" is-maint":""}" onclick="${cardClick}">
         <div class="rp-stamp rp-stamp-${unit.status}">${unit.status==="available"?"Kosong":unit.status==="active"?"Disewa":"Servis"}</div>
         <div class="rp-unit-name">${esc(unit.name)}</div>
         <div class="rp-unit-rate rp-mono">${rupiah(unit.rate)}/jam</div>
@@ -993,14 +1844,22 @@ function renderDashboard() {
           <div class="rp-timer rp-mono js-timer${isWarning?" is-warning":""}${isOver?" is-over":""}" data-unit="${unit.id}" data-mode="${hasDuration?"countdown":"elapsed"}" data-start="${session.startTime}" data-end="${session.endTime||""}">${hasDuration ? (isOver?"-":"")+fmtHMS(Math.abs(remaining)) : fmtHMS(elapsed)}</div>
           <div class="rp-unit-customer">untuk ${esc(session.customerName)}</div>
           <div class="rp-running-cost rp-mono js-cost" data-unit="${unit.id}" data-rate="${unit.rate}" data-start="${session.startTime}" data-fixed="${hasDuration?"1":"0"}">${hasDuration?rupiah(runningCost):"≈ "+rupiah(runningCost)}</div>
+          ${queuedForUnit ? `<div class="rp-unit-note">${queuedForUnit} orang mengantre untuk unit ini</div>` : ""}
           <div class="rp-card-actions">
-            ${hasDuration ? `<button class="rp-btn rp-btn-ghost" onclick="openExtendModal('${unit.id}')">${icon("history",13)} Perpanjang</button>` : ""}
-            <button class="rp-btn rp-btn-stop" onclick="openFinishModal('${unit.id}')">${icon("stop",14)} Selesai &amp; Bayar</button>
+            ${hasDuration ? `<button class="rp-btn rp-btn-ghost" onclick="event.stopPropagation(); openExtendModal('${unit.id}')">${icon("history",13)} Perpanjang</button>` : ""}
+            <button class="rp-btn rp-btn-stop" onclick="event.stopPropagation(); openFinishModal('${unit.id}')">${icon("stop",14)} Selesai &amp; Bayar</button>
+          </div>
+          <div class="rp-card-actions">
+            <button class="rp-btn rp-btn-ghost" onclick="event.stopPropagation(); openQueueModal('${unit.id}')">${icon("users",13)} Antrian${queuedForUnit?` (${queuedForUnit})`:""}</button>
           </div>
         ` : isMaint ? `
           <div class="rp-unit-note">Unit sedang diservis, tidak bisa disewa.</div>
+          ${queuedForUnit ? `<div class="rp-unit-note">${queuedForUnit} orang mengantre untuk unit ini</div>` : ""}
+          <div class="rp-card-actions">
+            <button class="rp-btn rp-btn-ghost" onclick="event.stopPropagation(); openQueueModal('${unit.id}')">${icon("users",13)} Antrian${queuedForUnit?` (${queuedForUnit})`:""}</button>
+          </div>
         ` : `
-          <button class="rp-btn rp-btn-start" onclick="openStartModal('${unit.id}')">${icon("play",14)} Mulai Sewa</button>
+          <button class="rp-btn rp-btn-start" onclick="event.stopPropagation(); openStartModal('${unit.id}')">${icon("play",14)} Mulai Sewa</button>
         `}
       </div>`;
   }).join("");
@@ -1009,9 +1868,10 @@ function renderDashboard() {
     <div class="rp-page">
       <header class="rp-page-head"><h1>Dasbor Kasir</h1><p class="rp-sub">Ringkasan hari ini, ${fmtDateID(new Date())}</p></header>
       <div class="rp-stat-row">
-        <div class="rp-stat-card"><span class="rp-stat-label">Pendapatan hari ini</span><strong class="rp-mono rp-stat-value">${rupiah(todayRevenue)}</strong></div>
-        <div class="rp-stat-card"><span class="rp-stat-label">Transaksi hari ini</span><strong class="rp-mono rp-stat-value">${todayTx.length}</strong></div>
-        <div class="rp-stat-card"><span class="rp-stat-label">Unit sedang disewa</span><strong class="rp-mono rp-stat-value">${activeCount} / ${state.units.length}</strong></div>
+        <div class="rp-stat-card rp-clickable" onclick="openDashTxModal()"><span class="rp-stat-label">Pendapatan hari ini</span><strong class="rp-mono rp-stat-value">${rupiah(todayRevenue)}</strong></div>
+        <div class="rp-stat-card rp-clickable" onclick="openDashTxModal()"><span class="rp-stat-label">Transaksi hari ini</span><strong class="rp-mono rp-stat-value">${todayTx.length}</strong></div>
+        <div class="rp-stat-card rp-clickable" onclick="openDashActiveUnitsModal()"><span class="rp-stat-label">Unit sedang disewa</span><strong class="rp-mono rp-stat-value">${activeCount} / ${state.units.length}</strong></div>
+        <div class="rp-stat-card rp-clickable" onclick="openQueueModal()"><span class="rp-stat-label">Antrian menunggu</span><strong class="rp-mono rp-stat-value">${state.queue.length}</strong></div>
       </div>
       <div class="rp-ruled-head">Status unit</div>
       ${state.units.length === 0 ? emptyState("Belum ada unit PS. Tambahkan dulu di menu Unit PS.") : `<div class="rp-unit-grid">${cards}</div>`}
@@ -1318,19 +2178,19 @@ function renderLaporan() {
         ${icon("history",14)} ${compare ? `Sembunyikan perbandingan` : `Bandingkan dengan ${periodCompareLabel[period]}`}
       </button>
       <div class="rp-stat-row">
-        <div class="rp-stat-card">
+        <div class="rp-stat-card rp-clickable" onclick="openLaporanDetailModal('revenue')">
           <span class="rp-stat-label">Total pendapatan</span>
           <strong class="rp-mono rp-stat-value">${rupiah(totalRevenue)}</strong>
           ${deltaBadge}
         </div>
-        <div class="rp-stat-card"><span class="rp-stat-label">Jumlah sewa</span><strong class="rp-mono rp-stat-value">${totalTx}</strong></div>
-        <div class="rp-stat-card"><span class="rp-stat-label">Rata-rata per sewa</span><strong class="rp-mono rp-stat-value">${rupiah(avgPerTx)}</strong></div>
-        <div class="rp-stat-card"><span class="rp-stat-label">Total durasi disewa</span><strong class="rp-mono rp-stat-value">${totalHours.toFixed(1)} jam</strong></div>
+        <div class="rp-stat-card rp-clickable" onclick="openLaporanDetailModal('count')"><span class="rp-stat-label">Jumlah sewa</span><strong class="rp-mono rp-stat-value">${totalTx}</strong></div>
+        <div class="rp-stat-card rp-clickable" onclick="openLaporanDetailModal('avg')"><span class="rp-stat-label">Rata-rata per sewa</span><strong class="rp-mono rp-stat-value">${rupiah(avgPerTx)}</strong></div>
+        <div class="rp-stat-card rp-clickable" onclick="openLaporanDetailModal('duration')"><span class="rp-stat-label">Total durasi disewa</span><strong class="rp-mono rp-stat-value">${totalHours.toFixed(1)} jam</strong></div>
       </div>
-      <div class="rp-ruled-head">${chartTitle}</div>
+      <div class="rp-ruled-head">${chartTitle} <span class="rp-dim" style="text-transform:none;letter-spacing:normal;">— klik grafik untuk rincian</span></div>
       ${periodTx.length===0 && !compare ? emptyState("Belum ada data pendapatan pada periode ini.") : `
         <div class="rp-chart-box">
-          ${svgTrendChart(trend.labels, series)}
+          ${svgTrendChart(trend.labels, series, period, start.getTime())}
           <div class="rp-chart-legend">
             ${series.map(s => `<span class="rp-legend-item"><span class="rp-legend-swatch" style="background:${s.color};${s.dashed?"background-image:repeating-linear-gradient(90deg,"+s.color+" 0 4px, transparent 4px 7px);background-color:transparent;":""}"></span>${esc(s.label)}</span>`).join("")}
           </div>
@@ -1358,7 +2218,7 @@ function exportLaporanCSV() {
   })), "Laporan");
 }
 
-function svgTrendChart(labels, series) {
+function svgTrendChart(labels, series, period, startMs) {
   const w = 640, h = 220, padL = 64, padB = 26, padT = 14, padR = 14;
   const chartW = w - padL - padR, chartH = h - padT - padB;
   const allVals = series.flatMap(s => s.values);
@@ -1399,7 +2259,17 @@ function svgTrendChart(labels, series) {
     labelsSvg += `<text x="${xFor(i).toFixed(1)}" y="${h-8}" font-family="var(--rp-mono)" font-size="11" fill="var(--rp-ink)" text-anchor="middle">${esc(lab)}</text>`;
   });
 
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:220px;"><defs>${defs}</defs>${gridLines}${paths}${dots}${labelsSvg}</svg>`;
+  let hitAreas = "";
+  if (period && startMs) {
+    labels.forEach((lab, i) => {
+      const cx = xFor(i);
+      const bandLeft = i === 0 ? padL : (xFor(i-1) + cx) / 2;
+      const bandRight = i === labels.length - 1 ? w - padR : (cx + xFor(i+1)) / 2;
+      hitAreas += `<rect x="${bandLeft.toFixed(1)}" y="0" width="${(bandRight-bandLeft).toFixed(1)}" height="${h}" fill="transparent" style="cursor:pointer" onclick="openTrendPointModal('${period}', ${startMs}, ${i})"><title>${esc(lab)}</title></rect>`;
+    });
+  }
+
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:220px;"><defs>${defs}</defs>${gridLines}${paths}${dots}${labelsSvg}${hitAreas}</svg>`;
 }
 
 /* --------------------- Shared bits --------------------- */
