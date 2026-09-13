@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rental PS — Kasir Digital</title>
+<script>
+  // Set tema sedini mungkin biar tidak "kedip" warna salah saat halaman dibuka.
+  (function () {
+    try {
+      var t = localStorage.getItem("rp_theme") || "dark";
+      document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  })();
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+
+  :root {
+    /* ===== Token yang SELALU sama di kedua tema (identitas brand) ===== */
+    --rp-grad-brand: linear-gradient(135deg, #4C8DFF 0%, #8B6BFF 100%);
+    --rp-grad-stop: linear-gradient(135deg, #FF6B85 0%, #E23554 100%);
+    --rp-serif: 'Space Grotesk', 'Inter', sans-serif;
+    --rp-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+    --rp-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    /* ===== Token yang beda per tema — default GELAP di sini,
+       ditimpa oleh [data-theme="light"] di bawah ===== */
+    --rp-page-bg:
+      radial-gradient(1100px 720px at 12% -8%, rgba(76,141,255,0.20), transparent 60%),
+      radial-gradient(900px 600px at 100% 0%, rgba(139,107,255,0.12), transparent 55%),
+      linear-gradient(180deg, #0a1128 0%, #05070f 100%);
+    --rp-sidebar-bg: rgba(9,14,32,0.72);
+    --rp-surface: rgba(19,28,61,0.66);
+    --rp-surface-2: rgba(28,40,86,0.78);
+    --rp-surface-solid: #131c3e;
+    --rp-border: rgba(150,171,224,0.14);
+    --rp-border-strong: rgba(150,171,224,0.3);
+    --rp-ink: #EAF0FF;
+    --rp-ink-dim: #8B98C4;
+    --rp-line: rgba(150,171,224,0.14);
+    --rp-hover-tint: rgba(150,171,224,0.08);
+    --rp-input-bg: rgba(255,255,255,0.04);
+    --rp-th-bg: rgba(255,255,255,0.02);
+    --rp-neutral-tint: rgba(150,171,224,0.1);
+    --rp-overlay: rgba(4,7,16,0.6);
+    --rp-elevation-shadow: rgba(0,0,0,0.6);
+    --rp-scrollbar: rgba(150,171,224,0.25);
+    --rp-scrollbar-hover: rgba(150,171,224,0.4);
+    --rp-focus-ring: rgba(76,141,255,0.18);
+
+    --rp-red: #FF6B85;
+    --rp-red-tint: rgba(255,107,133,0.12);
+    --rp-red-ring: rgba(255,107,133,0.5);
+    --rp-red-glow: rgba(255,60,95,0.5);
+    --rp-teal: #35E4B5;
+    --rp-teal-tint: rgba(53,228,181,0.1);
+    --rp-amber: #FFC15E;
+    --rp-amber-tint: rgba(255,193,94,0.12);
+    --rp-navy: #4C8DFF;
+    --rp-navy-soft: #6672A6;
+    --rp-violet: #8B6BFF;
+  }
+  [data-theme="light"] {
+    --rp-page-bg:
+      radial-gradient(1100px 720px at 12% -8%, rgba(37,99,235,0.14), transparent 60%),
+      radial-gradient(900px 600px at 100% 0%, rgba(124,58,237,0.10), transparent 55%),
+      linear-gradient(180deg, #eef3ff 0%, #ffffff 100%);
+    --rp-sidebar-bg: rgba(255,255,255,0.78);
+    --rp-surface: rgba(255,255,255,0.72);
+    --rp-surface-2: rgba(255,255,255,0.92);
+    --rp-surface-solid: #ffffff;
+    --rp-border: rgba(30,41,82,0.12);
+    --rp-border-strong: rgba(30,41,82,0.24);
+    --rp-ink: #101a33;
+    --rp-ink-dim: #5b6484;
+    --rp-line: rgba(30,41,82,0.12);
+    --rp-hover-tint: rgba(30,41,82,0.06);
+    --rp-input-bg: rgba(15,23,42,0.035);
+    --rp-th-bg: rgba(15,23,42,0.025);
+    --rp-neutral-tint: rgba(30,41,82,0.08);
+    --rp-overlay: rgba(15,23,42,0.4);
+    --rp-elevation-shadow: rgba(30,41,82,0.22);
+    --rp-scrollbar: rgba(30,41,82,0.18);
+    --rp-scrollbar-hover: rgba(30,41,82,0.3);
+    --rp-focus-ring: rgba(37,99,235,0.18);
+
+    --rp-red: #D2174A;
+    --rp-red-tint: rgba(210,23,74,0.1);
+    --rp-red-ring: rgba(210,23,74,0.4);
+    --rp-red-glow: rgba(210,23,74,0.22);
+    --rp-teal: #0D8A72;
+    --rp-teal-tint: rgba(13,138,114,0.1);
+    --rp-amber: #A85608;
+    --rp-amber-tint: rgba(168,86,8,0.1);
+    --rp-navy: #2563EB;
+    --rp-navy-soft: #94A3B8;
+    --rp-violet: #7C3AED;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%;
+    background: var(--rp-page-bg);
+    background-attachment: fixed;
+    color: var(--rp-ink);
+    font-family: var(--rp-sans);
+    transition: background-color .2s ease, color .2s ease;
+  }
+  #root { display: flex; min-height: 100vh; }
+  .rp-mono { font-family: var(--rp-mono); }
+
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--rp-scrollbar); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--rp-scrollbar-hover); }
+
+  /* Sidebar */
+  .rp-sidebar {
+    width: 236px; flex-shrink: 0; background: var(--rp-sidebar-bg);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border-right: 1px solid var(--rp-border);
+    display: flex; flex-direction: column; padding: 18px 14px;
+  }
+  .rp-brand { display: flex; gap: 10px; align-items: center; padding-bottom: 16px; margin-bottom: 14px; border-bottom: 1px solid var(--rp-border); }
+  .rp-brand-mark {
+    width: 36px; height: 36px; border-radius: 9px; background: var(--rp-grad-brand);
+    color: #fff; font-family: var(--rp-serif); font-weight: 700; font-size: 13px; letter-spacing: 0.01em;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset, 0 6px 18px -6px rgba(76,141,255,0.65);
+  }
+  .rp-brand-text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+  .rp-brand-input { font-family: var(--rp-serif); font-weight: 600; font-size: 14.5px; color: var(--rp-ink); background: transparent; border: none; padding: 0; width: 100%; }
+  .rp-brand-input:focus { outline: none; border-bottom: 1px dashed var(--rp-ink-dim); }
+  .rp-brand-sub { font-size: 11px; color: var(--rp-ink-dim); }
+  .rp-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .rp-nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; border: none; background: transparent; color: var(--rp-ink-dim); font-size: 13.5px; text-align: left; cursor: pointer; font-family: var(--rp-sans); width: 100%; transition: background .15s ease, color .15s ease; }
+  .rp-nav-item:hover { background: var(--rp-hover-tint); color: var(--rp-ink); }
+  .rp-nav-item.is-active { background: var(--rp-grad-brand); color: #fff; box-shadow: 0 6px 16px -6px rgba(76,141,255,0.55); }
+  .rp-sidebar-foot { border-top: 1px solid var(--rp-border); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .rp-stat-mini { display: flex; flex-direction: column; font-size: 11px; color: var(--rp-ink-dim); }
+  .rp-stat-mini strong { font-size: 13px; color: var(--rp-ink); font-family: var(--rp-mono); }
+  .rp-sync-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--rp-ink-dim); margin-top: 4px; }
+  .rp-sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rp-teal); flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+  .rp-sync-dot.is-busy { background: var(--rp-amber); }
+  .rp-sync-dot.is-error { background: var(--rp-red); }
+  .rp-refresh-btn { background: transparent; border: 1px solid var(--rp-border); border-radius: 6px; color: var(--rp-ink-dim); font-size: 11px; padding: 5px 8px; cursor: pointer; margin-top: 4px; }
+  .rp-refresh-btn:hover { color: var(--rp-ink); border-color: var(--rp-border-strong); }
+
+  /* Main */
+  .rp-main { flex: 1; overflow-y: auto; padding: 28px 32px; min-width: 0; height: 100vh; }
+  .rp-page { max-width: 940px; }
+  .rp-page-head { margin-bottom: 20px; }
+  .rp-page-head-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .rp-page-head h1 { font-family: var(--rp-serif); font-weight: 600; font-size: 23px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .rp-sub { color: var(--rp-ink-dim); font-size: 13px; margin: 0; }
+  .rp-ruled-head { font-family: var(--rp-serif); font-size: 13.5px; font-weight: 600; padding-bottom: 6px; margin: 22px 0 12px; border-bottom: 1px solid var(--rp-border); color: var(--rp-ink); }
+
+  .rp-stat-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .rp-stat-card { flex: 1; min-width: 160px; background: var(--rp-surface); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--rp-border); border-radius: 12px; padding: 14px 16px; min-width: 0; }
+  .rp-stat-label { display: block; font-size: 11.5px; color: var(--rp-ink-dim); margin-bottom: 6px; overflow-wrap: break-word; }
+  .rp-stat-value { font-size: 20px; color: var(--rp-ink); overflow-wrap: break-word; font-family: var(--rp-mono); }
+
+  .rp-unit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .rp-card { position: relative; background: var(--rp-surface); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--rp-border); border-radius: 12px; padding: 16px; }
+  .rp-unit-card.is-active { border-color: var(--rp-red-ring); box-shadow: 0 0 0 1px var(--rp-red-tint), 0 10px 30px -12px var(--rp-red-glow); }
+  .rp-unit-card.is-maint { opacity: 0.6; }
+  .rp-unit-name { font-family: var(--rp-serif); font-weight: 600; font-size: 15px; margin-bottom: 2px; padding-right: 64px; color: var(--rp-ink); }
+  .rp-unit-rate { font-size: 12px; color: var(--rp-ink-dim); margin-bottom: 12px; font-family: var(--rp-mono); }
+  .rp-timer { font-size: 22px; font-weight: 600; color: var(--rp-red); margin-bottom: 2px; font-family: var(--rp-mono); }
+  .rp-timer.is-warning { color: var(--rp-amber); animation: rp-blink 1s step-start infinite; }
+  .rp-timer.is-over { color: var(--rp-red); animation: rp-blink 0.6s step-start infinite; }
+  @keyframes rp-blink { 50% { opacity: 0.35; } }
+  .rp-unit-customer { font-size: 12px; color: var(--rp-ink-dim); margin-bottom: 6px; }
+  .rp-running-cost { font-size: 13px; color: var(--rp-amber); margin-bottom: 12px; font-family: var(--rp-mono); }
+  .rp-unit-note { font-size: 12px; color: var(--rp-ink-dim); font-style: italic; }
+  .rp-card-actions { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+  .rp-card-actions .rp-btn { width: auto; flex: 1; min-width: 0; white-space: nowrap; }
+
+  .rp-stamp {
+    position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 5px;
+    font-family: var(--rp-mono); font-size: 10px; letter-spacing: 0.02em; padding: 3px 9px 3px 7px;
+    border-radius: 20px; border: 1px solid currentColor; background: var(--rp-neutral-tint);
+  }
+  .rp-stamp::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .rp-stamp-inline { position: static; display: inline-flex; }
+  .rp-stamp-available { color: var(--rp-teal); background: var(--rp-teal-tint); }
+  .rp-stamp-active { color: var(--rp-red); background: var(--rp-red-tint); box-shadow: 0 0 12px -2px var(--rp-red-glow); }
+  .rp-stamp-active::before { box-shadow: 0 0 6px currentColor; }
+  .rp-stamp-maintenance { color: var(--rp-ink-dim); background: var(--rp-neutral-tint); }
+
+  .rp-btn { display: inline-flex; align-items: center; gap: 6px; justify-content: center; font-family: var(--rp-sans); font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 8px; border: 1px solid transparent; cursor: pointer; width: 100%; transition: transform .12s ease, box-shadow .12s ease, filter .12s ease; }
+  .rp-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .rp-btn-start { background: var(--rp-grad-brand); color: #fff; box-shadow: 0 6px 18px -8px rgba(76,141,255,0.6); }
+  .rp-btn-start:hover:not(:disabled) { filter: brightness(1.08); }
+  .rp-btn-stop { background: var(--rp-grad-stop); color: #fff; box-shadow: 0 6px 18px -8px rgba(255,60,95,0.55); }
+  .rp-btn-stop:hover:not(:disabled) { filter: brightness(1.08); }
+  .rp-btn-ghost { background: transparent; border-color: var(--rp-border-strong); color: var(--rp-ink); width: auto; }
+  .rp-btn-ghost:hover:not(:disabled) { background: var(--rp-hover-tint); }
+  .rp-head-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .rp-page-head-row .rp-btn { width: auto; }
+
+  .rp-table-wrap { overflow-x: auto; border: 1px solid var(--rp-border); border-radius: 12px; background: var(--rp-surface); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .rp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .rp-table th { text-align: left; font-weight: 600; font-size: 11.5px; color: var(--rp-ink-dim); padding: 10px 14px; border-bottom: 1px solid var(--rp-border); background: var(--rp-th-bg); white-space: nowrap; }
+  .rp-table td { padding: 10px 14px; border-bottom: 1px solid var(--rp-border); color: var(--rp-ink); }
+  .rp-table tr:last-child td { border-bottom: none; }
+  .rp-dim { color: var(--rp-ink-dim); font-size: 11px; }
+  .rp-row-actions { display: flex; gap: 4px; }
+
+  .rp-icon-btn { background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 5px; cursor: pointer; color: var(--rp-ink-dim); display: inline-flex; }
+  .rp-icon-btn:hover { background: var(--rp-hover-tint); color: var(--rp-ink); }
+  .rp-icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .rp-icon-danger:hover { color: var(--rp-red); }
+
+  .rp-cond { font-size: 12px; padding: 2px 8px; border-radius: 20px; }
+  .rp-cond-Baik { color: var(--rp-teal); background: var(--rp-teal-tint); }
+  .rp-cond-Rusak { color: var(--rp-red); background: var(--rp-red-tint); }
+  .rp-cond-Perlu-cek { color: var(--rp-amber); background: var(--rp-amber-tint); }
+
+  .rp-search { display: flex; align-items: center; gap: 6px; border: 1px solid var(--rp-border); border-radius: 8px; padding: 6px 10px; background: var(--rp-surface); color: var(--rp-ink-dim); }
+  .rp-search input { border: none; background: transparent; font-size: 13px; color: var(--rp-ink); outline: none; width: 180px; font-family: var(--rp-sans); }
+  .rp-search-wide { margin-bottom: 14px; width: fit-content; }
+
+  .rp-empty { display: flex; align-items: center; gap: 8px; color: var(--rp-ink-dim); font-size: 13px; padding: 18px; justify-content: center; }
+
+  .rp-modal-backdrop { position: fixed; inset: 0; background: var(--rp-overlay); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 50; }
+  .rp-modal { background: var(--rp-surface-solid); border: 1px solid var(--rp-border-strong); border-radius: 14px; width: 360px; max-width: 92vw; max-height: 86vh; overflow-y: auto; box-shadow: 0 24px 60px -20px var(--rp-elevation-shadow); }
+  .rp-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--rp-border); }
+  .rp-modal-head h3 { font-family: var(--rp-serif); font-size: 15px; font-weight: 600; margin: 0; color: var(--rp-ink); }
+  .rp-modal-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .rp-modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+  .rp-modal-foot .rp-btn { width: auto; white-space: nowrap; }
+
+  .rp-field { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--rp-ink-dim); }
+  .rp-field input, .rp-field select { font-family: var(--rp-sans); font-size: 13.5px; color: var(--rp-ink); border: 1px solid var(--rp-border); border-radius: 8px; padding: 8px 10px; background: var(--rp-input-bg); }
+  .rp-field input:focus, .rp-field select:focus { outline: none; border-color: var(--rp-navy); box-shadow: 0 0 0 3px rgba(76,141,255,0.18); }
+  .rp-field-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rp-pill { flex: 1; min-width: 62px; padding: 7px 4px; border-radius: 8px; border: 1px solid var(--rp-border); background: transparent; color: var(--rp-ink-dim); font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+  .rp-pill.is-on { background: var(--rp-grad-brand); color: #fff; border-color: transparent; }
+
+  .rp-receipt { border: 1px dashed var(--rp-border-strong); border-radius: 10px; padding: 12px 14px; }
+  .rp-receipt-row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; }
+  .rp-receipt-line { border-top: 1px dashed var(--rp-border-strong); margin: 4px 0; }
+  .rp-receipt-total { font-size: 15px; font-family: var(--rp-mono); }
+
+  .rp-chart-box { border: 1px solid var(--rp-border); border-radius: 12px; padding: 14px; background: var(--rp-surface); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .rp-chart-legend { display: flex; gap: 18px; margin-top: 8px; font-size: 12px; color: var(--rp-ink-dim); flex-wrap: wrap; }
+  .rp-legend-item { display: flex; align-items: center; gap: 6px; }
+  .rp-legend-swatch { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+  .rp-delta-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; padding: 2px 7px; border-radius: 20px; margin-top: 4px; }
+  .rp-delta-up { color: var(--rp-teal); background: rgba(53,228,181,0.12); }
+  .rp-delta-down { color: var(--rp-red); background: var(--rp-red-tint); }
+  .rp-delta-flat { color: var(--rp-ink-dim); background: var(--rp-neutral-tint); }
+
+  .rp-toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--rp-surface-solid); border: 1px solid var(--rp-border-strong); color: var(--rp-ink); padding: 10px 18px; border-radius: 10px; font-size: 13px; z-index: 60; box-shadow: 0 12px 30px -10px var(--rp-elevation-shadow); }
+
+  .rp-loading-screen { display: flex; align-items: center; justify-content: center; height: 100vh; width: 100%; font-family: var(--rp-serif); font-size: 16px; color: var(--rp-ink-dim); }
+
+  @media (max-width: 720px) {
+    #root { flex-direction: column; }
+    .rp-sidebar {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+      width: 100%; flex-direction: row; align-items: stretch;
+      overflow-x: auto; border-right: none; border-top: 1px solid var(--rp-border);
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    }
+    .rp-brand { display: none; }
+    .rp-nav { flex-direction: row; flex: 1; gap: 0; justify-content: space-around; }
+    .rp-nav-item {
+      flex-direction: column; gap: 3px; align-items: center; justify-content: center;
+      width: auto; flex: 1; padding: 6px 2px; border-radius: 8px;
+    }
+    .rp-nav-label { font-size: 10px; line-height: 1.1; white-space: nowrap; }
+    .rp-sidebar-foot { display: none; }
+    .rp-main { height: auto; padding-bottom: calc(76px + env(safe-area-inset-bottom)); padding-left: 16px; padding-right: 16px; }
+
+    /* 4 card jadi 2 kolom sebaris di mobile (dashboard & laporan) */
+    .rp-stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .rp-stat-card { padding: 10px 12px; }
+    .rp-stat-label { font-size: 10.5px; margin-bottom: 4px; }
+    .rp-stat-value { font-size: 16px; }
+    .rp-delta-badge { font-size: 10px; }
+
+    /* Kecilkan tombol & pastikan tidak meluber keluar card/modal */
+    .rp-btn { font-size: 12px; padding: 7px 10px; }
+    .rp-pill { font-size: 11.5px; padding: 6px 4px; }
+    .rp-unit-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .rp-card { padding: 12px; }
+    .rp-unit-name { font-size: 13.5px; padding-right: 44px; }
+    .rp-stamp { top: 8px; right: 8px; font-size: 8.5px; padding: 2px 7px 2px 6px; letter-spacing: 0; white-space: nowrap; }
+    .rp-timer { font-size: 18px; }
+    .rp-modal { width: 320px; }
+  }
+
+</style>
+</head>
+<body>
+<div id="root"><div class="rp-loading-screen">Menyiapkan sistem…</div></div>
+<div id="modal-root"></div>
+<div id="toast" class="rp-toast" style="display:none;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* =========================================================
+   KONFIGURASI — GANTI SESUAI DEPLOYMENT APPS SCRIPT KAMU
+========================================================= */
+const API_URL = "https://script.google.com/macros/s/AKfycby-FqFnNa4d3AXtDiB_1hluP_1Cbv3jhMx_FKcZvpm6RJNjl0qOBrFUhFzvbm7Y_d1hzg/exec";
+
+/* =========================================================
+   Helpers
+========================================================= */
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const rupiah = (n) => "Rp" + Math.round(n || 0).toLocaleString("id-ID");
+const pad2 = (n) => String(n).padStart(2, "0");
+function fmtHMS(ms) {
+  const t = Math.max(0, Math.floor(ms / 1000));
+  return `${pad2(Math.floor(t/3600))}:${pad2(Math.floor((t%3600)/60))}:${pad2(t%60)}`;
+}
+function fmtDateID(v) { try { return new Date(v).toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"}); } catch { return "-"; } }
+function fmtTimeID(v) { try { return new Date(v).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"}); } catch { return "-"; } }
+function esc(s) { return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function downloadXLSX(filename, rows, sheetName) {
+  if (!rows.length) { flash("Tidak ada data untuk diekspor."); return; }
+  if (typeof XLSX === "undefined") { flash("Gagal memuat modul Excel — cek koneksi internet."); return; }
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const colWidths = Object.keys(rows[0]).map(key => ({
+    wch: Math.max(key.length, ...rows.map(r => String(r[key] ?? "").length)) + 2
+  }));
+  ws["!cols"] = colWidths;
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName || "Data");
+  XLSX.writeFile(wb, filename);
+}
+
+const ICONS = {
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  trash: '<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6"/>',
+  pencil: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
+  play: '<path d="M6 4.5v15l13-7.5Z"/>',
+  stop: '<rect x="5" y="5" width="14" height="14" rx="2"/>',
+  wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.8 2.8-2-2Z"/>',
+  download: '<path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 19h16"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  gamepad: '<rect x="2" y="7" width="20" height="10" rx="5"/><path d="M7 10v4M5 12h4"/><path d="M16 11h.01M18 13h.01"/>',
+  history: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v5l3 2"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  box: '<path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  chart: '<path d="M4 20V10M12 20V4M20 20v-7"/><path d="M2 20h20"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/>',
+  moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
+};
+function getTheme() {
+  try { return localStorage.getItem("rp_theme") || "dark"; } catch (e) { return "dark"; }
+}
+function setTheme(t) {
+  document.documentElement.setAttribute("data-theme", t);
+  try { localStorage.setItem("rp_theme", t); } catch (e) {}
+}
+function toggleTheme() {
+  setTheme(getTheme() === "dark" ? "light" : "dark");
+  if (ready) renderAll();
+}
+
+function icon(name, size) {
+  size = size || 14;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">${ICONS[name] || ""}</svg>`;
+}
+
+/* =========================================================
+   API — jembatan ke Google Sheets (Apps Script)
+   Dioptimalkan untuk sinyal lemah: timeout, cache lokal,
+   dan outbox retry biar perubahan tidak hilang.
+========================================================= */
+const FETCH_TIMEOUT_MS = 12000;
+const CACHE_KEY = "rp_cache_v1";
+const OUTBOX_KEY = "rp_outbox_v1";
+
+let syncState = "idle"; // idle | busy | error
+let isLoading = false;
+let outboxRetryTimer = null;
+
+function setSync(s) { syncState = s; renderSyncDot(); }
+
+function fetchWithTimeout(url, options, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms || FETCH_TIMEOUT_MS);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
+function loadCache() {
+  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; }
+}
+function saveCache() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); } catch {}
+}
+
+function getOutbox() {
+  try { return JSON.parse(localStorage.getItem(OUTBOX_KEY) || "{}"); } catch { return {}; }
+}
+function setOutbox(ob) {
+  try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(ob)); } catch {}
+}
+function outboxHas(sheet) { return !!getOutbox()[sheet]; }
+function outboxCount() { return Object.keys(getOutbox()).length; }
+
+async function apiGetAll() {
+  const res = await fetchWithTimeout(API_URL, {}, FETCH_TIMEOUT_MS);
+  const json = await res.json();
+  if (!json.ok) throw new Error(json.error || "Gagal memuat data");
+  return json.data;
+}
+
+async function apiSave(sheet, rows) {
+  // Simpan dulu secara lokal (outbox) sebelum coba kirim — kalau sinyal
+  // putus di tengah jalan, perubahan ini tidak akan hilang.
+  const ob = getOutbox();
+  ob[sheet] = { rows, ts: Date.now() };
+  setOutbox(ob);
+  saveCache(); // state lokal (termasuk perubahan ini) ikut tersimpan di perangkat
+  renderSyncDot();
+
+  setSync("busy");
+  try {
+    if (navigator.onLine === false) throw new Error("offline");
+    const res = await fetchWithTimeout(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ sheet, rows }),
+    }, FETCH_TIMEOUT_MS);
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || "Gagal menyimpan");
+    const ob2 = getOutbox();
+    delete ob2[sheet];
+    setOutbox(ob2);
+    setSync("idle");
+  } catch (e) {
+    console.error(e);
+    setSync("error");
+    flash("Sinyal lemah — perubahan disimpan di perangkat, akan disinkron otomatis.");
+    scheduleOutboxRetry();
+  }
+  renderSyncDot();
+}
+
+function scheduleOutboxRetry(delayMs) {
+  clearTimeout(outboxRetryTimer);
+  outboxRetryTimer = setTimeout(flushOutbox, delayMs || 6000);
+}
+
+async function flushOutbox() {
+  const ob = getOutbox();
+  const entries = Object.entries(ob);
+  if (!entries.length) return;
+  if (navigator.onLine === false) { scheduleOutboxRetry(8000); return; }
+  for (const [sheet, entry] of entries) {
+    try {
+      const res = await fetchWithTimeout(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ sheet, rows: entry.rows }),
+      }, FETCH_TIMEOUT_MS);
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "Gagal menyimpan");
+      const ob2 = getOutbox();
+      delete ob2[sheet];
+      setOutbox(ob2);
+      setSync("idle");
+    } catch (e) {
+      // Masih gagal — biarkan di outbox, coba lagi nanti dengan jeda lebih lama.
+      scheduleOutboxRetry(15000);
+      renderSyncDot();
+      return;
+    }
+  }
+  renderSyncDot();
+}
+
+window.addEventListener("online", () => flushOutbox());
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    flushOutbox();
+    if (ready) refreshData();
+  }
+});
+
+function normalize(raw) {
+  const settingsRow = (raw.Settings && raw.Settings[0]) || {};
+  let businessName = settingsRow.businessName;
+  let defaultRate = Number(settingsRow.defaultRate);
+  if (!businessName || businessName === "businessName") businessName = "Rental PS Saya";
+  if (!defaultRate || isNaN(defaultRate)) defaultRate = 5000;
+
+  const units = (raw.Units || []).map(u => ({ ...u, rate: Number(u.rate) || 0 }));
+
+  const activeRentals = {};
+  (raw.ActiveRentals || []).forEach(r => {
+    if (r.unitId) activeRentals[r.unitId] = {
+      startTime: Number(r.startTime), customerName: r.customerName || "Tamu",
+      memberId: r.memberId || null, note: r.note || "",
+      endTime: r.endTime ? Number(r.endTime) : null
+    };
+  });
+
+  const transactions = (raw.Transactions || []).map(t => ({
+    ...t, start: Number(t.start), end: Number(t.end),
+    minutes: Number(t.minutes), amount: Number(t.amount)
+  })).sort((a,b) => b.end - a.end);
+
+  const members = (raw.Members || []).map(m => ({
+    ...m, joined: Number(m.joined) || Date.now(),
+    visits: Number(m.visits) || 0, totalSpent: Number(m.totalSpent) || 0
+  }));
+
+  const inventory = (raw.Inventory || []).map(i => ({ ...i, lastCheck: Number(i.lastCheck) || Date.now() }));
+
+  return { settings: { businessName, defaultRate }, units, activeRentals, transactions, members, inventory };
+}
+
+/* =========================================================
+   State
+========================================================= */
+let state = { settings: { businessName: "Rental PS Saya", defaultRate: 5000 }, units: [], activeRentals: {}, transactions: [], members: [], inventory: [] };
+let currentTab = "dashboard";
+let ready = false;
+
+function flash(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.display = "block";
+  clearTimeout(flash._timer);
+  flash._timer = setTimeout(() => { t.style.display = "none"; }, 2400);
+}
+
+// Terapkan data dari server, tapi jangan timpa bagian yang masih
+// menunggu tersinkron di outbox (biar perubahan lokal tidak hilang
+// saat sinyal lemah dan refresh otomatis jalan duluan).
+function applyRemote(raw) {
+  const incoming = normalize(raw);
+  const ob = getOutbox();
+  const skipUnits = !!ob.Units, skipActive = !!ob.ActiveRentals,
+        skipTx = !!ob.Transactions, skipMembers = !!ob.Members,
+        skipInv = !!ob.Inventory, skipSettings = !!ob.Settings;
+  if (!skipSettings) state.settings = incoming.settings;
+  if (!skipUnits) state.units = incoming.units;
+  if (!skipActive) state.activeRentals = incoming.activeRentals;
+  if (!skipTx) state.transactions = incoming.transactions;
+  if (!skipMembers) state.members = incoming.members;
+  if (!skipInv) state.inventory = incoming.inventory;
+  saveCache();
+}
+
+async function loadAll() {
+  // Tampilkan dulu data terakhir yang tersimpan di perangkat (kalau ada)
+  // supaya kasir tidak menatap layar kosong menunggu sinyal.
+  const cached = loadCache();
+  if (cached) {
+    state = cached;
+    ready = true;
+    renderAll();
+  }
+  try {
+    const raw = await apiGetAll();
+    applyRemote(raw);
+  } catch (e) {
+    console.error(e);
+    if (!cached) flash("Gagal memuat data — cek koneksi internet.");
+  }
+  ready = true;
+  renderAll();
+  flushOutbox();
+}
+
+async function refreshData() {
+  if (isLoading) return; // hindari request numpuk kalau sinyal lambat
+  isLoading = true;
+  setSync("busy");
+  try {
+    const raw = await apiGetAll();
+    applyRemote(raw);
+    setSync("idle");
+    renderAll();
+  } catch (e) {
+    setSync("error");
+    flash("Sinyal lemah — gagal menyegarkan data, dicoba lagi otomatis.");
+  } finally {
+    isLoading = false;
+  }
+}
+
+/* =========================================================
+   Persist per-entity (write-through, optimistic UI)
+========================================================= */
+function persistUnits() { apiSave("Units", state.units); }
+function persistActive() {
+  const rows = Object.entries(state.activeRentals).map(([unitId, v]) => ({ unitId, ...v }));
+  apiSave("ActiveRentals", rows);
+}
+function persistTransactions() { apiSave("Transactions", state.transactions); }
+function persistMembers() { apiSave("Members", state.members); }
+function persistInventory() { apiSave("Inventory", state.inventory); }
+function persistSettings() { apiSave("Settings", [state.settings]); }
+
+/* =========================================================
+   Business logic
+========================================================= */
+function setTab(tab) { currentTab = tab; renderAll(); }
+
+function startRental(unitId, customerName, memberId, note, plannedMinutes) {
+  const startTime = Date.now();
+  const endTime = plannedMinutes ? startTime + plannedMinutes * 60000 : null;
+  state.activeRentals[unitId] = { startTime, customerName: customerName || "Tamu", memberId: memberId || null, note: note || "", endTime };
+  window._alertedUnits.delete(unitId);
+  const unit = state.units.find(u => u.id === unitId);
+  if (unit) unit.status = "active";
+  closeModal();
+  renderAll();
+  persistActive(); persistUnits();
+  flash(`${unit ? unit.name : "Unit"} mulai disewa${endTime ? ` — durasi ${plannedMinutes} menit` : ""}`);
+}
+
+function extendRental(unitId, addMinutes) {
+  const session = state.activeRentals[unitId];
+  if (!session || !addMinutes) return;
+  const base = session.endTime && session.endTime > Date.now() ? session.endTime : Date.now();
+  session.endTime = base + addMinutes * 60000;
+  window._alertedUnits.delete(unitId);
+  closeModal();
+  renderAll();
+  persistActive();
+  flash("Waktu sewa diperpanjang.");
+}
+
+function finishRental(unitId, payment, discount, frozenMs) {
+  const session = state.activeRentals[unitId];
+  const unit = state.units.find(u => u.id === unitId);
+  if (!session || !unit) return;
+  const ms = frozenMs != null ? frozenMs : Date.now() - session.startTime;
+  const minutes = Math.max(1, Math.round(ms / 60000));
+  const rawAmount = (minutes / 60) * unit.rate;
+  const amount = Math.max(0, Math.round(rawAmount - (discount || 0)));
+
+  const trx = {
+    id: uid(), unitId: unit.id, unitName: unit.name, customerName: session.customerName,
+    memberId: session.memberId || "", start: session.startTime, end: session.startTime + ms,
+    minutes, amount, payment, note: session.note,
+  };
+  state.transactions.unshift(trx);
+  delete state.activeRentals[unitId];
+  window._alertedUnits.delete(unitId);
+  unit.status = "available";
+
+  if (session.memberId) {
+    const m = state.members.find(x => x.id === session.memberId);
+    if (m) { m.visits = (m.visits || 0) + 1; m.totalSpent = (m.totalSpent || 0) + amount; }
+  }
+
+  closeModal();
+  renderAll();
+  persistTransactions(); persistActive(); persistUnits();
+  if (session.memberId) persistMembers();
+  flash(`Sewa ${unit.name} selesai — ${rupiah(amount)}`);
+}
+
+function upsertUnit(unit) {
+  const idx = state.units.findIndex(u => u.id === unit.id);
+  if (idx >= 0) state.units[idx] = unit; else state.units.push(unit);
+  closeModal(); renderAll(); persistUnits();
+}
+function removeUnit(id) {
+  if (state.activeRentals[id]) return;
+  state.units = state.units.filter(u => u.id !== id);
+  window._alertedUnits.delete(id);
+  renderAll(); persistUnits();
+}
+function toggleMaint(id) {
+  const u = state.units.find(x => x.id === id);
+  if (!u || u.status === "active") return;
+  u.status = u.status === "maintenance" ? "available" : "maintenance";
+  renderAll(); persistUnits();
+}
+
+function upsertMember(m) {
+  const idx = state.members.findIndex(x => x.id === m.id);
+  if (idx >= 0) state.members[idx] = { ...state.members[idx], ...m };
+  else state.members.push({ ...m, visits: 0, totalSpent: 0, joined: Date.now() });
+  closeModal(); renderAll(); persistMembers();
+}
+function removeMember(id) { state.members = state.members.filter(m => m.id !== id); renderAll(); persistMembers(); }
+
+function upsertInventory(item) {
+  const idx = state.inventory.findIndex(x => x.id === item.id);
+  if (idx >= 0) state.inventory[idx] = item; else state.inventory.push(item);
+  closeModal(); renderAll(); persistInventory();
+}
+function removeInventory(id) { state.inventory = state.inventory.filter(i => i.id !== id); renderAll(); persistInventory(); }
+
+function saveBusinessName(v) { state.settings.businessName = v; persistSettings(); }
+
+/* =========================================================
+   Modal
+========================================================= */
+function closeModal() { document.getElementById("modal-root").innerHTML = ""; }
+function openModal(html) { document.getElementById("modal-root").innerHTML = html; }
+
+function modalShell(title, bodyHtml) {
+  return `
+  <div class="rp-modal-backdrop" onclick="closeModal()">
+    <div class="rp-modal" onclick="event.stopPropagation()">
+      <div class="rp-modal-head"><h3>${esc(title)}</h3>
+        <button class="rp-icon-btn" onclick="closeModal()">${icon("x",16)}</button>
+      </div>
+      <div class="rp-modal-body">${bodyHtml}</div>
+    </div>
+  </div>`;
+}
+
+function openStartModal(unitId) {
+  const unit = state.units.find(u => u.id === unitId);
+  if (!unit) return;
+  const memberOptions = state.members.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join("");
+  openModal(modalShell(`Mulai sewa — ${esc(unit.name)}`, `
+    <div class="rp-field-row">
+      <button id="mode-guest" class="rp-pill is-on" onclick="setStartMode('guest')">Tamu baru</button>
+      <button id="mode-member" class="rp-pill" onclick="setStartMode('member')">Pelanggan terdaftar</button>
+    </div>
+    <div id="start-mode-body">
+      <label class="rp-field"><span>Nama tamu</span><input id="start-name" placeholder="Cth: Rio" /></label>
+    </div>
+    <label class="rp-field"><span>Catatan (opsional)</span><input id="start-note" placeholder="Cth: bawa 2 stik" /></label>
+    <div class="rp-field-row">
+      <button id="dur-none" class="rp-pill is-on" onclick="setDurationMode('none')">Tanpa batas</button>
+      <button id="dur-fixed" class="rp-pill" onclick="setDurationMode('fixed')">Atur durasi</button>
+    </div>
+    <div id="duration-body"></div>
+    <div class="rp-modal-foot">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="rp-btn rp-btn-start" onclick="confirmStart('${unitId}')">${icon("play",14)} Mulai sekarang</button>
+    </div>
+  `));
+  window._startMode = "guest";
+  window._durationMode = "none";
+  window._memberOptionsHtml = memberOptions;
+}
+function setStartMode(mode) {
+  window._startMode = mode;
+  document.getElementById("mode-guest").className = "rp-pill" + (mode === "guest" ? " is-on" : "");
+  document.getElementById("mode-member").className = "rp-pill" + (mode === "member" ? " is-on" : "");
+  const body = document.getElementById("start-mode-body");
+  if (mode === "guest") {
+    body.innerHTML = `<label class="rp-field"><span>Nama tamu</span><input id="start-name" placeholder="Cth: Rio" /></label>`;
+  } else {
+    body.innerHTML = `<label class="rp-field"><span>Pilih pelanggan</span><select id="start-member">${window._memberOptionsHtml || '<option value="">Belum ada pelanggan</option>'}</select></label>`;
+  }
+}
+function setDurationMode(mode) {
+  window._durationMode = mode;
+  document.getElementById("dur-none").className = "rp-pill" + (mode === "none" ? " is-on" : "");
+  document.getElementById("dur-fixed").className = "rp-pill" + (mode === "fixed" ? " is-on" : "");
+  const body = document.getElementById("duration-body");
+  if (mode === "fixed") {
+    body.innerHTML = `
+      <div class="rp-field-row">
+        <label class="rp-field"><span>Jam</span><input id="dur-hours" type="number" min="0" value="1" /></label>
+        <label class="rp-field"><span>Menit</span><input id="dur-minutes" type="number" min="0" max="59" value="0" /></label>
+      </div>
+      <div class="rp-field-row">
+        ${[30,60,90,120,180].map(m => `<button type="button" class="rp-pill" onclick="setDurationPreset(${m})">${m<60?m+" mnt":(m/60)+" jam"}</button>`).join("")}
+      </div>`;
+  } else {
+    body.innerHTML = "";
+  }
+}
+function setDurationPreset(mins) {
+  document.getElementById("dur-hours").value = Math.floor(mins/60);
+  document.getElementById("dur-minutes").value = mins % 60;
+}
+function confirmStart(unitId) {
+  let plannedMinutes = null;
+  if (window._durationMode === "fixed") {
+    const h = Number(document.getElementById("dur-hours").value) || 0;
+    const m = Number(document.getElementById("dur-minutes").value) || 0;
+    plannedMinutes = h * 60 + m;
+    if (plannedMinutes <= 0) { flash("Durasi harus lebih dari 0 menit."); return; }
+  }
+  if (window._startMode === "member") {
+    const sel = document.getElementById("start-member");
+    const memberId = sel ? sel.value : "";
+    const m = state.members.find(x => x.id === memberId);
+    startRental(unitId, m ? m.name : "Tamu", memberId || null, document.getElementById("start-note").value, plannedMinutes);
+  } else {
+    const name = document.getElementById("start-name").value || "Tamu";
+    startRental(unitId, name, null, document.getElementById("start-note").value, plannedMinutes);
+  }
+}
+
+function openFinishModal(unitId) {
+  const unit = state.units.find(u => u.id === unitId);
+  const session = state.activeRentals[unitId];
+  if (!unit || !session) return;
+  clearInterval(window._alarmTick);
+  const isFixed = !!session.endTime;
+  // Untuk sewa berdurasi tetap, harga dikunci sesuai paket yang dipilih di awal —
+  // tidak dihitung dari waktu aktual berjalan, biar tidak ada "argo jalan".
+  const ms = isFixed ? (session.endTime - session.startTime) : (Date.now() - session.startTime);
+  window._finishStop = { unitId, ms, isFixed };
+  openModal(modalShell(`Selesaikan sewa — ${esc(unit.name)}`, `
+    <div class="rp-receipt">
+      <div class="rp-receipt-row"><span>Penyewa</span><strong>${esc(session.customerName)}</strong></div>
+      <div class="rp-receipt-row"><span>Durasi</span><strong class="rp-mono" id="finish-duration">${fmtHMS(ms)}</strong></div>
+      <div class="rp-receipt-row"><span>Tarif</span><strong class="rp-mono">${rupiah(unit.rate)}/jam</strong></div>
+      <div class="rp-receipt-line"></div>
+      <div class="rp-receipt-row rp-receipt-total"><span>Total</span><strong class="rp-mono" id="finish-total">${rupiah(ms/3600000*unit.rate)}</strong></div>
+    </div>
+    <p class="rp-dim">${isFixed ? "Sewa paket durasi tetap — total harga sudah dikunci sesuai paket, tidak berubah walau selesai lebih cepat atau lebih lama." : "Argo berhenti di sini — durasi dan total tidak akan bertambah lagi."}</p>
+    <label class="rp-field"><span>Diskon (Rp, opsional)</span><input id="finish-discount" type="number" min="0" value="0" oninput="updateFinishTotal('${unitId}')" /></label>
+    <label class="rp-field"><span>Metode pembayaran</span>
+      <select id="finish-payment"><option>Tunai</option><option>QRIS</option><option>Transfer</option></select>
+    </label>
+    <div class="rp-modal-foot">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="rp-btn rp-btn-stop" onclick="confirmFinish('${unitId}')">${icon("stop",14)} Selesaikan &amp; catat</button>
+    </div>
+  `));
+}
+function updateFinishTotal(unitId) {
+  const unit = state.units.find(u => u.id === unitId);
+  if (!unit || !window._finishStop || window._finishStop.unitId !== unitId) return;
+  const discount = Number(document.getElementById("finish-discount").value) || 0;
+  const amount = Math.max(0, Math.round(window._finishStop.ms / 3600000 * unit.rate - discount));
+  const el = document.getElementById("finish-total");
+  if (el) el.textContent = rupiah(amount);
+}
+function confirmFinish(unitId) {
+  const payment = document.getElementById("finish-payment").value;
+  const discount = Number(document.getElementById("finish-discount").value) || 0;
+  const frozenMs = window._finishStop && window._finishStop.unitId === unitId ? window._finishStop.ms : null;
+  finishRental(unitId, payment, discount, frozenMs);
+  window._finishStop = null;
+}
+
+/* --------------------- Alarm & perpanjang waktu --------------------- */
+window._alertedUnits = window._alertedUnits || new Set();
+
+function checkRentalAlarms() {
+  const now = Date.now();
+  Object.entries(state.activeRentals).forEach(([unitId, session]) => {
+    if (!session.endTime) return;
+    const remaining = session.endTime - now;
+    if (remaining <= 10 * 60000 && !window._alertedUnits.has(unitId)) {
+      window._alertedUnits.add(unitId);
+      triggerRentalAlarm(unitId);
+    }
+  });
+}
+setInterval(checkRentalAlarms, 1000);
+
+function playAlarmBeep() {
+  try {
+    const ctx = window._audioCtx || (window._audioCtx = new (window.AudioContext || window.webkitAudioContext)());
+    [0, 0.32, 0.64].forEach(delay => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "square"; o.frequency.value = 880; g.gain.value = 0.16;
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime + delay);
+      o.stop(ctx.currentTime + delay + 0.22);
+    });
+  } catch (e) { console.error(e); }
+}
+
+function triggerRentalAlarm(unitId) {
+  const unit = state.units.find(u => u.id === unitId);
+  const session = state.activeRentals[unitId];
+  if (!unit || !session) return;
+  playAlarmBeep();
+  try {
+    if ("Notification" in window) {
+      if (Notification.permission === "granted") {
+        new Notification("⏰ Waktu sewa hampir habis", { body: `${unit.name} — sisa waktu tinggal sedikit.` });
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+    }
+  } catch (e) { /* abaikan jika notifikasi tidak didukung */ }
+  openAlarmModal(unitId);
+}
+
+function openAlarmModal(unitId) {
+  const unit = state.units.find(u => u.id === unitId);
+  const session = state.activeRentals[unitId];
+  if (!unit || !session || !session.endTime) return;
+  clearInterval(window._alarmTick);
+  openModal(modalShell(`⏰ Waktu hampir habis — ${esc(unit.name)}`, `
+    <div class="rp-receipt">
+      <div class="rp-receipt-row"><span>Penyewa</span><strong>${esc(session.customerName)}</strong></div>
+      <div class="rp-receipt-row"><span>Sisa waktu</span><strong class="rp-mono" id="alarm-remaining">${fmtHMS(Math.abs(session.endTime - Date.now()))}</strong></div>
+    </div>
+    <p class="rp-sub">Sewa akan segera berakhir. Perpanjang waktu, atau sudah selesai dan mau dibayar?</p>
+    <div class="rp-modal-foot" style="justify-content:space-between;">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal()">Nanti dulu</button>
+      <button class="rp-btn rp-btn-ghost" onclick="openExtendModal('${unitId}')">${icon("history",14)} Perpanjang</button>
+      <button class="rp-btn rp-btn-stop" onclick="openFinishModal('${unitId}')">${icon("stop",14)} Sudah Selesai</button>
+    </div>
+  `));
+  window._alarmTick = setInterval(() => {
+    const el = document.getElementById("alarm-remaining");
+    if (!el) { clearInterval(window._alarmTick); return; }
+    const rem = session.endTime - Date.now();
+    el.textContent = (rem <= 0 ? "Lewat " : "") + fmtHMS(Math.abs(rem));
+  }, 1000);
+}
+
+function openExtendModal(unitId) {
+  clearInterval(window._alarmTick);
+  const unit = state.units.find(u => u.id === unitId);
+  const session = state.activeRentals[unitId];
+  if (!unit || !session) return;
+  openModal(modalShell(`Perpanjang sewa — ${esc(unit.name)}`, `
+    <div class="rp-field-row">
+      <label class="rp-field"><span>Tambah jam</span><input id="extend-hours" type="number" min="0" value="1" /></label>
+      <label class="rp-field"><span>Tambah menit</span><input id="extend-minutes" type="number" min="0" max="59" value="0" /></label>
+    </div>
+    <div class="rp-field-row">
+      ${[15,30,60,120].map(m => `<button type="button" class="rp-pill" onclick="setExtendPreset(${m})">${m<60?m+" mnt":(m/60)+" jam"}</button>`).join("")}
+    </div>
+    <div class="rp-modal-foot">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="rp-btn rp-btn-start" onclick="confirmExtend('${unitId}')">${icon("play",14)} Perpanjang</button>
+    </div>
+  `));
+}
+function setExtendPreset(mins) {
+  document.getElementById("extend-hours").value = Math.floor(mins/60);
+  document.getElementById("extend-minutes").value = mins % 60;
+}
+function confirmExtend(unitId) {
+  const h = Number(document.getElementById("extend-hours").value) || 0;
+  const m = Number(document.getElementById("extend-minutes").value) || 0;
+  const addMinutes = h * 60 + m;
+  if (addMinutes <= 0) { flash("Masukkan durasi tambahan."); return; }
+  extendRental(unitId, addMinutes);
+}
+
+function openUnitModal(unitId) {
+  const existing = state.units.find(u => u.id === unitId);
+  const unit = existing || { id: uid(), name: "", rate: state.settings.defaultRate, status: "available" };
+  openModal(modalShell(existing ? "Ubah unit" : "Tambah unit", `
+    <label class="rp-field"><span>Nama unit</span><input id="unit-name" value="${esc(unit.name)}" placeholder="Cth: PS5 - Bilik 1" /></label>
+    <label class="rp-field"><span>Tarif per jam (Rp)</span><input id="unit-rate" type="number" min="0" value="${unit.rate}" /></label>
+    <div class="rp-modal-foot">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="rp-btn rp-btn-start" onclick="submitUnit('${unit.id}', '${unit.status}')">Simpan</button>
+    </div>
+  `));
+}
+function submitUnit(id, status) {
+  const name = document.getElementById("unit-name").value.trim();
+  if (!name) return;
+  const rate = Number(document.getElementById("unit-rate").value) || 0;
+  upsertUnit({ id, name, rate, status });
+}
+
+function openMemberModal(memberId) {
+  const existing = state.members.find(m => m.id === memberId);
+  const m = existing || { id: uid(), name: "", phone: "" };
+  openModal(modalShell(existing ? "Ubah pelanggan" : "Tambah pelanggan", `
+    <label class="rp-field"><span>Nama</span><input id="member-name" value="${esc(m.name)}" /></label>
+    <label class="rp-field"><span>No. HP</span><input id="member-phone" value="${esc(m.phone||"")}" /></label>
+    <div class="rp-modal-foot">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="rp-btn rp-btn-start" onclick="submitMember('${m.id}')">Simpan</button>
+    </div>
+  `));
+}
+function submitMember(id) {
+  const name = document.getElementById("member-name").value.trim();
+  if (!name) return;
+  const phone = document.getElementById("member-phone").value;
+  upsertMember({ id, name, phone });
+}
+
+const CONDITIONS = ["Baik", "Perlu cek", "Rusak"];
+const CATEGORIES = ["Stik", "Game/Disk", "Kabel", "TV/Monitor", "Konsol", "Lainnya"];
+function openInventoryModal(itemId) {
+  const existing = state.inventory.find(i => i.id === itemId);
+  const item = existing || { id: uid(), name: "", category: "Stik", unitId: "", condition: "Baik", note: "" };
+  const unitOptions = state.units.map(u => `<option value="${u.id}" ${item.unitId===u.id?"selected":""}>${esc(u.name)}</option>`).join("");
+  openModal(modalShell(existing ? "Ubah item" : "Tambah item", `
+    <label class="rp-field"><span>Nama item</span><input id="inv-name" value="${esc(item.name)}" placeholder="Cth: Stik DualSense 2" /></label>
+    <label class="rp-field"><span>Kategori</span><select id="inv-category">${CATEGORIES.map(c=>`<option ${c===item.category?"selected":""}>${c}</option>`).join("")}</select></label>
+    <label class="rp-field"><span>Unit terkait (opsional)</span><select id="inv-unit"><option value="">—</option>${unitOptions}</select></label>
+    <label class="rp-field"><span>Kondisi</span><select id="inv-condition">${CONDITIONS.map(c=>`<option ${c===item.condition?"selected":""}>${c}</option>`).join("")}</select></label>
+    <label class="rp-field"><span>Catatan</span><input id="inv-note" value="${esc(item.note||"")}" /></label>
+    <div class="rp-modal-foot">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="rp-btn rp-btn-start" onclick="submitInventory('${item.id}')">Simpan</button>
+    </div>
+  `));
+}
+function submitInventory(id) {
+  const name = document.getElementById("inv-name").value.trim();
+  if (!name) return;
+  upsertInventory({
+    id, name,
+    category: document.getElementById("inv-category").value,
+    unitId: document.getElementById("inv-unit").value,
+    condition: document.getElementById("inv-condition").value,
+    note: document.getElementById("inv-note").value,
+    lastCheck: Date.now(),
+  });
+}
+
+/* =========================================================
+   Render — Shell
+========================================================= */
+const NAV = [
+  { id: "dashboard", label: "Dasbor", icon: "grid" },
+  { id: "units", label: "Unit PS", icon: "gamepad" },
+  { id: "riwayat", label: "Riwayat Sewa", icon: "history" },
+  { id: "member", label: "Pelanggan", icon: "users" },
+  { id: "stok", label: "Stok & Servis", icon: "box" },
+  { id: "laporan", label: "Laporan", icon: "chart" },
+];
+
+function renderSyncDot() {
+  const dot = document.getElementById("sync-dot");
+  const label = document.getElementById("sync-label");
+  if (!dot) return;
+  const pending = outboxCount();
+  let cls = "", text = "Tersinkron";
+  if (syncState === "busy") { cls = " is-busy"; text = "Menyimpan…"; }
+  else if (pending > 0) { cls = " is-busy"; text = "Menunggu sinyal (" + pending + ")"; }
+  else if (syncState === "error") { cls = " is-error"; text = "Gagal sinkron"; }
+  dot.className = "rp-sync-dot" + cls;
+  label.textContent = text;
+}
+
+function renderAll() {
+  if (!ready) return;
+  const todayStr = new Date().toDateString();
+  const todayTx = state.transactions.filter(t => new Date(t.end).toDateString() === todayStr);
+  const todayRevenue = todayTx.reduce((a,t) => a + t.amount, 0);
+  const activeCount = Object.keys(state.activeRentals).length;
+
+  document.getElementById("root").innerHTML = `
+    <aside class="rp-sidebar">
+      <div class="rp-brand">
+        <div class="rp-brand-mark">PS</div>
+        <div class="rp-brand-text">
+          <input id="brand-input" class="rp-brand-input" value="${esc(state.settings.businessName)}" />
+          <span class="rp-brand-sub">Sistem Kasir Digital</span>
+        </div>
+      </div>
+      <nav class="rp-nav">
+        ${NAV.map(n => `<button class="rp-nav-item${currentTab===n.id?" is-active":""}" onclick="setTab('${n.id}')">${icon(n.icon,18)}<span class="rp-nav-label">${esc(n.label)}</span></button>`).join("")}
+        <button class="rp-nav-item" onclick="toggleTheme()" title="Ganti mode terang/gelap">${icon(getTheme()==="dark"?"sun":"moon",18)}<span class="rp-nav-label">${getTheme()==="dark"?"Mode Terang":"Mode Gelap"}</span></button>
+      </nav>
+      <div class="rp-sidebar-foot">
+        <div class="rp-stat-mini"><span>Unit aktif</span><strong>${activeCount} / ${state.units.length}</strong></div>
+        <div class="rp-stat-mini"><span>Pendapatan hari ini</span><strong class="rp-mono">${rupiah(todayRevenue)}</strong></div>
+        <div class="rp-sync-row"><span id="sync-dot" class="rp-sync-dot"></span><span id="sync-label">Tersinkron</span></div>
+        <button class="rp-refresh-btn" onclick="refreshData()">Segarkan data</button>
+      </div>
+    </aside>
+    <main class="rp-main">${renderTab()}</main>
+  `;
+  document.getElementById("brand-input").addEventListener("input", (e) => { saveBusinessName(e.target.value); });
+  renderSyncDot();
+  wireTabExtras();
+}
+
+function renderTab() {
+  switch (currentTab) {
+    case "dashboard": return renderDashboard();
+    case "units": return renderUnits();
+    case "riwayat": return renderRiwayat();
+    case "member": return renderMember();
+    case "stok": return renderStok();
+    case "laporan": return renderLaporan();
+    default: return "";
+  }
+}
+
+/* --------------------- Dashboard --------------------- */
+function renderDashboard() {
+  const todayStr = new Date().toDateString();
+  const todayTx = state.transactions.filter(t => new Date(t.end).toDateString() === todayStr);
+  const todayRevenue = todayTx.reduce((a,t) => a + t.amount, 0);
+  const activeCount = Object.keys(state.activeRentals).length;
+
+  const cards = state.units.map(unit => {
+    const session = state.activeRentals[unit.id];
+    const isActive = unit.status === "active" && session;
+    const isMaint = unit.status === "maintenance";
+    const hasDuration = isActive && !!session.endTime;
+    const elapsed = isActive ? Date.now() - session.startTime : 0;
+    const remaining = hasDuration ? session.endTime - Date.now() : 0;
+    const isOver = hasDuration && remaining <= 0;
+    const isWarning = hasDuration && !isOver && remaining <= 10*60000;
+    const runningCost = isActive
+      ? (hasDuration ? (session.endTime - session.startTime) : elapsed) / 3600000 * unit.rate
+      : 0;
+    return `
+      <div class="rp-card rp-unit-card${isActive?" is-active":""}${isMaint?" is-maint":""}">
+        <div class="rp-stamp rp-stamp-${unit.status}">${unit.status==="available"?"Kosong":unit.status==="active"?"Disewa":"Servis"}</div>
+        <div class="rp-unit-name">${esc(unit.name)}</div>
+        <div class="rp-unit-rate rp-mono">${rupiah(unit.rate)}/jam</div>
+        ${isActive ? `
+          ${hasDuration ? `<div class="rp-unit-customer">${isOver?"Waktu habis":"Sisa waktu"}</div>` : ""}
+          <div class="rp-timer rp-mono js-timer${isWarning?" is-warning":""}${isOver?" is-over":""}" data-unit="${unit.id}" data-mode="${hasDuration?"countdown":"elapsed"}" data-start="${session.startTime}" data-end="${session.endTime||""}">${hasDuration ? (isOver?"-":"")+fmtHMS(Math.abs(remaining)) : fmtHMS(elapsed)}</div>
+          <div class="rp-unit-customer">untuk ${esc(session.customerName)}</div>
+          <div class="rp-running-cost rp-mono js-cost" data-unit="${unit.id}" data-rate="${unit.rate}" data-start="${session.startTime}" data-fixed="${hasDuration?"1":"0"}">${hasDuration?rupiah(runningCost):"≈ "+rupiah(runningCost)}</div>
+          <div class="rp-card-actions">
+            ${hasDuration ? `<button class="rp-btn rp-btn-ghost" onclick="openExtendModal('${unit.id}')">${icon("history",13)} Perpanjang</button>` : ""}
+            <button class="rp-btn rp-btn-stop" onclick="openFinishModal('${unit.id}')">${icon("stop",14)} Selesai &amp; Bayar</button>
+          </div>
+        ` : isMaint ? `
+          <div class="rp-unit-note">Unit sedang diservis, tidak bisa disewa.</div>
+        ` : `
+          <button class="rp-btn rp-btn-start" onclick="openStartModal('${unit.id}')">${icon("play",14)} Mulai Sewa</button>
+        `}
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="rp-page">
+      <header class="rp-page-head"><h1>Dasbor Kasir</h1><p class="rp-sub">Ringkasan hari ini, ${fmtDateID(new Date())}</p></header>
+      <div class="rp-stat-row">
+        <div class="rp-stat-card"><span class="rp-stat-label">Pendapatan hari ini</span><strong class="rp-mono rp-stat-value">${rupiah(todayRevenue)}</strong></div>
+        <div class="rp-stat-card"><span class="rp-stat-label">Transaksi hari ini</span><strong class="rp-mono rp-stat-value">${todayTx.length}</strong></div>
+        <div class="rp-stat-card"><span class="rp-stat-label">Unit sedang disewa</span><strong class="rp-mono rp-stat-value">${activeCount} / ${state.units.length}</strong></div>
+      </div>
+      <div class="rp-ruled-head">Status unit</div>
+      ${state.units.length === 0 ? emptyState("Belum ada unit PS. Tambahkan dulu di menu Unit PS.") : `<div class="rp-unit-grid">${cards}</div>`}
+    </div>`;
+}
+
+function tickDashboardTimers() {
+  if (currentTab !== "dashboard") return;
+  document.querySelectorAll(".js-timer").forEach(el => {
+    if (el.dataset.mode === "countdown") {
+      const end = Number(el.dataset.end);
+      const remaining = end - Date.now();
+      const over = remaining <= 0;
+      el.textContent = (over ? "-" : "") + fmtHMS(Math.abs(remaining));
+      el.classList.toggle("is-warning", !over && remaining <= 10*60000);
+      el.classList.toggle("is-over", over);
+    } else {
+      const start = Number(el.dataset.start);
+      el.textContent = fmtHMS(Date.now() - start);
+    }
+  });
+  document.querySelectorAll(".js-cost").forEach(el => {
+    if (el.dataset.fixed === "1") return;
+    const start = Number(el.dataset.start);
+    const rate = Number(el.dataset.rate);
+    const cost = (Date.now() - start) / 3600000 * rate;
+    el.textContent = "≈ " + rupiah(cost);
+  });
+}
+setInterval(tickDashboardTimers, 1000);
+
+/* --------------------- Unit PS --------------------- */
+function renderUnits() {
+  const rows = state.units.map(u => `
+    <tr>
+      <td>${esc(u.name)}</td>
+      <td class="rp-mono">${rupiah(u.rate)}</td>
+      <td><span class="rp-stamp rp-stamp-${u.status} rp-stamp-inline">${u.status==="available"?"Kosong":u.status==="active"?"Disewa":"Servis"}</span></td>
+      <td class="rp-row-actions">
+        <button class="rp-icon-btn" onclick="openUnitModal('${u.id}')" title="Ubah">${icon("pencil",15)}</button>
+        <button class="rp-icon-btn" onclick="toggleMaint('${u.id}')" ${u.status==="active"?"disabled":""} title="Servis">${icon("wrench",15)}</button>
+        <button class="rp-icon-btn rp-icon-danger" onclick="removeUnit('${u.id}')" ${state.activeRentals[u.id]?"disabled":""} title="Hapus">${icon("trash",15)}</button>
+      </td>
+    </tr>`).join("");
+  return `
+    <div class="rp-page">
+      <header class="rp-page-head rp-page-head-row">
+        <div><h1>Unit PS</h1><p class="rp-sub">Atur jumlah unit dan tarif sewa per jam — bisa ditambah atau dikurangi kapan saja.</p></div>
+        <button class="rp-btn rp-btn-start" onclick="openUnitModal('')">${icon("plus",14)} Tambah unit</button>
+      </header>
+      <div class="rp-table-wrap"><table class="rp-table">
+        <thead><tr><th>Unit</th><th>Tarif/jam</th><th>Status</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="4">${emptyState("Belum ada unit. Klik “Tambah unit” untuk mulai.")}</td></tr>`}</tbody>
+      </table></div>
+    </div>`;
+}
+
+/* --------------------- Riwayat --------------------- */
+function renderRiwayat() {
+  const total = state.transactions.reduce((a,t)=>a+t.amount,0);
+  const rows = state.transactions.map(t => `
+    <tr data-name="${esc((t.unitName+" "+t.customerName).toLowerCase())}">
+      <td>${fmtDateID(t.end)} <span class="rp-dim">${fmtTimeID(t.end)}</span></td>
+      <td>${esc(t.unitName)}</td>
+      <td>${esc(t.customerName)}</td>
+      <td class="rp-mono">${t.minutes} mnt</td>
+      <td class="rp-mono">${rupiah(t.amount)}</td>
+      <td>${esc(t.payment)}</td>
+    </tr>`).join("");
+  return `
+    <div class="rp-page">
+      <header class="rp-page-head rp-page-head-row">
+        <div><h1>Riwayat Sewa</h1><p class="rp-sub" id="riwayat-count">${state.transactions.length} transaksi · total ${rupiah(total)}</p></div>
+        <div class="rp-head-tools">
+          <div class="rp-search">${icon("search",14)}<input id="riwayat-search" placeholder="Cari unit / nama…" /></div>
+          <button class="rp-btn rp-btn-ghost" onclick="exportRiwayatCSV()" ${!state.transactions.length?"disabled":""}>${icon("download",14)} Ekspor Excel</button>
+        </div>
+      </header>
+      <div class="rp-table-wrap"><table class="rp-table" id="riwayat-table">
+        <thead><tr><th>Tanggal</th><th>Unit</th><th>Penyewa</th><th>Durasi</th><th>Total</th><th>Bayar</th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="6">${emptyState("Belum ada transaksi tercatat.")}</td></tr>`}</tbody>
+      </table></div>
+    </div>`;
+}
+function exportRiwayatCSV() {
+  downloadXLSX("riwayat-sewa.xlsx", state.transactions.map(t => ({
+    Tanggal: fmtDateID(t.end), Jam: fmtTimeID(t.end), Unit: t.unitName, Penyewa: t.customerName,
+    "Durasi (menit)": t.minutes, "Total (Rp)": t.amount, Pembayaran: t.payment, Catatan: t.note || "",
+  })), "Riwayat Sewa");
+}
+
+/* --------------------- Member --------------------- */
+function renderMember() {
+  const rows = state.members.map(m => `
+    <tr data-name="${esc(m.name.toLowerCase())}">
+      <td>${esc(m.name)}</td>
+      <td class="rp-mono">${esc(m.phone||"-")}</td>
+      <td class="rp-mono">${m.visits||0}</td>
+      <td class="rp-mono">${rupiah(m.totalSpent||0)}</td>
+      <td>${fmtDateID(m.joined)}</td>
+      <td class="rp-row-actions">
+        <button class="rp-icon-btn" onclick="openMemberModal('${m.id}')" title="Ubah">${icon("pencil",15)}</button>
+        <button class="rp-icon-btn rp-icon-danger" onclick="removeMember('${m.id}')" title="Hapus">${icon("trash",15)}</button>
+      </td>
+    </tr>`).join("");
+  return `
+    <div class="rp-page">
+      <header class="rp-page-head rp-page-head-row">
+        <div><h1>Pelanggan</h1><p class="rp-sub">Simpan data pelanggan tetap untuk memantau kunjungan &amp; total belanja.</p></div>
+        <button class="rp-btn rp-btn-start" onclick="openMemberModal('')">${icon("plus",14)} Tambah pelanggan</button>
+      </header>
+      <div class="rp-search rp-search-wide">${icon("search",14)}<input id="member-search" placeholder="Cari nama pelanggan…" /></div>
+      <div class="rp-table-wrap"><table class="rp-table" id="member-table">
+        <thead><tr><th>Nama</th><th>No. HP</th><th>Kunjungan</th><th>Total belanja</th><th>Sejak</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="6">${emptyState("Belum ada pelanggan tercatat.")}</td></tr>`}</tbody>
+      </table></div>
+    </div>`;
+}
+
+/* --------------------- Stok & Servis --------------------- */
+function renderStok() {
+  const rows = state.inventory.map(i => `
+    <tr>
+      <td>${esc(i.name)}</td>
+      <td>${esc(i.category)}</td>
+      <td>${esc((state.units.find(u=>u.id===i.unitId)||{}).name || "-")}</td>
+      <td><span class="rp-cond rp-cond-${i.condition.replace(" ","-")}">${esc(i.condition)}</span></td>
+      <td>${fmtDateID(i.lastCheck)}</td>
+      <td class="rp-row-actions">
+        <button class="rp-icon-btn" onclick="openInventoryModal('${i.id}')" title="Ubah">${icon("pencil",15)}</button>
+        <button class="rp-icon-btn rp-icon-danger" onclick="removeInventory('${i.id}')" title="Hapus">${icon("trash",15)}</button>
+      </td>
+    </tr>`).join("");
+  return `
+    <div class="rp-page">
+      <header class="rp-page-head rp-page-head-row">
+        <div><h1>Stok &amp; Servis</h1><p class="rp-sub">Pantau kondisi stik, kabel, game, dan jadwal servis unit.</p></div>
+        <button class="rp-btn rp-btn-start" onclick="openInventoryModal('')">${icon("plus",14)} Tambah item</button>
+      </header>
+      <div class="rp-table-wrap"><table class="rp-table">
+        <thead><tr><th>Item</th><th>Kategori</th><th>Unit terkait</th><th>Kondisi</th><th>Cek terakhir</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="6">${emptyState("Belum ada item dicatat.")}</td></tr>`}</tbody>
+      </table></div>
+    </div>`;
+}
+
+/* --------------------- Laporan --------------------- */
+function setLaporanPeriod(period) {
+  window._laporanPeriod = period;
+  renderAll();
+}
+function toggleLaporanCompare() {
+  window._laporanCompare = !window._laporanCompare;
+  renderAll();
+}
+
+function getPeriodRange(period) {
+  const now = new Date();
+  let start, label;
+  if (period === "minggu") {
+    const day = now.getDay();
+    const diffToMonday = (day === 0 ? 6 : day - 1);
+    start = new Date(now); start.setDate(now.getDate() - diffToMonday); start.setHours(0,0,0,0);
+    const endOfWeek = new Date(start); endOfWeek.setDate(start.getDate() + 6);
+    label = `Minggu ini (${start.toLocaleDateString("id-ID",{day:"2-digit",month:"short"})} – ${endOfWeek.toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"})})`;
+  } else if (period === "tahun") {
+    start = new Date(now.getFullYear(), 0, 1);
+    label = `Tahun ini (${now.getFullYear()})`;
+  } else {
+    start = new Date(now.getFullYear(), now.getMonth(), 1);
+    label = `Bulan ini (${now.toLocaleDateString("id-ID",{month:"long",year:"numeric"})})`;
+  }
+  return { start, end: now, label };
+}
+function getPreviousPeriodRange(period, currentStart) {
+  if (period === "minggu") {
+    const prevStart = new Date(currentStart); prevStart.setDate(prevStart.getDate() - 7);
+    const prevEnd = new Date(currentStart); prevEnd.setMilliseconds(prevEnd.getMilliseconds() - 1);
+    return { start: prevStart, end: prevEnd };
+  }
+  if (period === "tahun") {
+    const y = currentStart.getFullYear() - 1;
+    return { start: new Date(y, 0, 1), end: new Date(y, 11, 31, 23, 59, 59, 999) };
+  }
+  const y = currentStart.getFullYear(), m = currentStart.getMonth();
+  const prevMonthDate = new Date(y, m - 1, 1);
+  return { start: prevMonthDate, end: new Date(y, m, 0, 23, 59, 59, 999) };
+}
+const periodCompareLabel = { minggu: "minggu lalu", bulan: "bulan lalu", tahun: "tahun lalu" };
+
+function sumByDay(d) {
+  const key = d.toDateString();
+  return state.transactions.filter(t => new Date(t.end).toDateString() === key).reduce((a,t) => a+t.amount, 0);
+}
+function sumByMonth(year, month) {
+  return state.transactions.filter(t => { const d = new Date(t.end); return d.getFullYear() === year && d.getMonth() === month; }).reduce((a,t) => a+t.amount, 0);
+}
+function sumByDate(year, month, day) {
+  return state.transactions.filter(t => { const d = new Date(t.end); return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day; }).reduce((a,t) => a+t.amount, 0);
+}
+
+function buildLaporanTrend(period, currentStart) {
+  if (period === "minggu") {
+    const monday = new Date(currentStart);
+    const prevMonday = new Date(monday); prevMonday.setDate(monday.getDate() - 7);
+    const labels = [], current = [], previous = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday); d.setDate(monday.getDate() + i);
+      const pd = new Date(prevMonday); pd.setDate(prevMonday.getDate() + i);
+      labels.push(d.toLocaleDateString("id-ID",{weekday:"short"}));
+      current.push(sumByDay(d));
+      previous.push(sumByDay(pd));
+    }
+    return { labels, current, previous };
+  }
+  if (period === "tahun") {
+    const year = currentStart.getFullYear();
+    const labels = [], current = [], previous = [];
+    for (let i = 0; i < 12; i++) {
+      labels.push(new Date(year, i, 1).toLocaleDateString("id-ID",{month:"short"}));
+      current.push(sumByMonth(year, i));
+      previous.push(sumByMonth(year - 1, i));
+    }
+    return { labels, current, previous };
+  }
+  const year = currentStart.getFullYear(), month = currentStart.getMonth();
+  const daysInCurrent = new Date(year, month + 1, 0).getDate();
+  const prevMonthDate = new Date(year, month - 1, 1);
+  const daysInPrev = new Date(prevMonthDate.getFullYear(), prevMonthDate.getMonth() + 1, 0).getDate();
+  const days = Math.min(daysInCurrent, daysInPrev);
+  const labels = [], current = [], previous = [];
+  for (let i = 1; i <= days; i++) {
+    labels.push(String(i));
+    current.push(sumByDate(year, month, i));
+    previous.push(sumByDate(prevMonthDate.getFullYear(), prevMonthDate.getMonth(), i));
+  }
+  return { labels, current, previous };
+}
+
+function renderLaporan() {
+  const period = window._laporanPeriod || "bulan";
+  const compare = !!window._laporanCompare;
+  const { start, end, label: periodLabel } = getPeriodRange(period);
+  const periodTx = state.transactions.filter(t => t.end >= start.getTime() && t.end <= end.getTime());
+
+  const totalRevenue = periodTx.reduce((a,t) => a+t.amount, 0);
+  const totalTx = periodTx.length;
+  const avgPerTx = totalTx ? totalRevenue / totalTx : 0;
+  const totalHours = periodTx.reduce((a,t) => a+t.minutes, 0) / 60;
+
+  let deltaBadge = "";
+  if (compare) {
+    const prevRange = getPreviousPeriodRange(period, start);
+    const prevTx = state.transactions.filter(t => t.end >= prevRange.start.getTime() && t.end <= prevRange.end.getTime());
+    const prevRevenue = prevTx.reduce((a,t) => a+t.amount, 0);
+    if (prevRevenue > 0) {
+      const pct = ((totalRevenue - prevRevenue) / prevRevenue) * 100;
+      const cls = pct > 0.5 ? "rp-delta-up" : pct < -0.5 ? "rp-delta-down" : "rp-delta-flat";
+      const arrow = pct > 0.5 ? "▲" : pct < -0.5 ? "▼" : "▬";
+      deltaBadge = `<div class="rp-delta-badge ${cls}">${arrow} ${Math.abs(pct).toFixed(1)}% vs ${periodCompareLabel[period]}</div>`;
+    } else if (totalRevenue > 0) {
+      deltaBadge = `<div class="rp-delta-badge rp-delta-up">▲ Baru — ${periodCompareLabel[period]} kosong</div>`;
+    }
+  }
+
+  const byUnitMap = {};
+  periodTx.forEach(t => {
+    if (!byUnitMap[t.unitName]) byUnitMap[t.unitName] = { count: 0, minutes: 0, total: 0 };
+    byUnitMap[t.unitName].count += 1;
+    byUnitMap[t.unitName].minutes += t.minutes;
+    byUnitMap[t.unitName].total += t.amount;
+  });
+  const byUnit = Object.entries(byUnitMap).sort((a,b) => b[1].total - a[1].total);
+
+  const byPaymentMap = {};
+  periodTx.forEach(t => {
+    const key = t.payment || "-";
+    if (!byPaymentMap[key]) byPaymentMap[key] = { count: 0, total: 0 };
+    byPaymentMap[key].count += 1;
+    byPaymentMap[key].total += t.amount;
+  });
+  const byPayment = Object.entries(byPaymentMap).sort((a,b) => b[1].total - a[1].total);
+
+  const trend = buildLaporanTrend(period, start);
+  const chartTitle = period === "minggu" ? "Tren pendapatan per hari (minggu ini)" : period === "tahun" ? "Tren pendapatan per bulan (tahun ini)" : "Tren pendapatan per hari (bulan ini)";
+  const series = [{ label: "Periode ini", values: trend.current, color: "var(--rp-navy)", filled: true }];
+  if (compare) series.push({ label: `Periode sebelumnya (${periodCompareLabel[period]})`, values: trend.previous, color: "var(--rp-navy-soft)", dashed: true });
+
+  window._laporanExportTx = periodTx;
+  window._laporanExportPeriod = period;
+
+  return `
+    <div class="rp-page">
+      <header class="rp-page-head rp-page-head-row">
+        <div><h1>Laporan</h1><p class="rp-sub">${periodLabel}</p></div>
+        <button class="rp-btn rp-btn-ghost" onclick="exportLaporanCSV()" ${!periodTx.length?"disabled":""}>${icon("download",14)} Ekspor Excel</button>
+      </header>
+      <div class="rp-field-row" style="max-width:420px;margin-bottom:10px;">
+        <button class="rp-pill${period==="minggu"?" is-on":""}" onclick="setLaporanPeriod('minggu')">Minggu ini</button>
+        <button class="rp-pill${period==="bulan"?" is-on":""}" onclick="setLaporanPeriod('bulan')">Bulan ini</button>
+        <button class="rp-pill${period==="tahun"?" is-on":""}" onclick="setLaporanPeriod('tahun')">Tahun ini</button>
+      </div>
+      <button class="rp-btn rp-btn-ghost" style="margin-bottom:18px;" onclick="toggleLaporanCompare()">
+        ${icon("history",14)} ${compare ? `Sembunyikan perbandingan` : `Bandingkan dengan ${periodCompareLabel[period]}`}
+      </button>
+      <div class="rp-stat-row">
+        <div class="rp-stat-card">
+          <span class="rp-stat-label">Total pendapatan</span>
+          <strong class="rp-mono rp-stat-value">${rupiah(totalRevenue)}</strong>
+          ${deltaBadge}
+        </div>
+        <div class="rp-stat-card"><span class="rp-stat-label">Jumlah sewa</span><strong class="rp-mono rp-stat-value">${totalTx}</strong></div>
+        <div class="rp-stat-card"><span class="rp-stat-label">Rata-rata per sewa</span><strong class="rp-mono rp-stat-value">${rupiah(avgPerTx)}</strong></div>
+        <div class="rp-stat-card"><span class="rp-stat-label">Total durasi disewa</span><strong class="rp-mono rp-stat-value">${totalHours.toFixed(1)} jam</strong></div>
+      </div>
+      <div class="rp-ruled-head">${chartTitle}</div>
+      ${periodTx.length===0 && !compare ? emptyState("Belum ada data pendapatan pada periode ini.") : `
+        <div class="rp-chart-box">
+          ${svgTrendChart(trend.labels, series)}
+          <div class="rp-chart-legend">
+            ${series.map(s => `<span class="rp-legend-item"><span class="rp-legend-swatch" style="background:${s.color};${s.dashed?"background-image:repeating-linear-gradient(90deg,"+s.color+" 0 4px, transparent 4px 7px);background-color:transparent;":""}"></span>${esc(s.label)}</span>`).join("")}
+          </div>
+        </div>`}
+      <div class="rp-ruled-head">Rincian per unit</div>
+      ${byUnit.length===0 ? emptyState("Belum ada data pendapatan pada periode ini.") : `
+        <div class="rp-table-wrap"><table class="rp-table">
+          <thead><tr><th>Unit</th><th>Jumlah sewa</th><th>Total durasi</th><th>Total pendapatan</th><th>Rata-rata/sewa</th></tr></thead>
+          <tbody>${byUnit.map(([name,d]) => `<tr><td>${esc(name)}</td><td class="rp-mono">${d.count}</td><td class="rp-mono">${(d.minutes/60).toFixed(1)} jam</td><td class="rp-mono">${rupiah(d.total)}</td><td class="rp-mono">${rupiah(d.total/d.count)}</td></tr>`).join("")}</tbody>
+        </table></div>`}
+      <div class="rp-ruled-head">Metode pembayaran</div>
+      ${byPayment.length===0 ? emptyState("Belum ada data pembayaran pada periode ini.") : `
+        <div class="rp-table-wrap"><table class="rp-table">
+          <thead><tr><th>Metode</th><th>Jumlah transaksi</th><th>Total nominal</th></tr></thead>
+          <tbody>${byPayment.map(([name,d]) => `<tr><td>${esc(name)}</td><td class="rp-mono">${d.count}</td><td class="rp-mono">${rupiah(d.total)}</td></tr>`).join("")}</tbody>
+        </table></div>`}
+    </div>`;
+}
+function exportLaporanCSV() {
+  const tx = window._laporanExportTx || [];
+  const period = window._laporanExportPeriod || "bulan";
+  downloadXLSX(`laporan-${period}.xlsx`, tx.map(t => ({
+    Tanggal: fmtDateID(t.end), Jam: fmtTimeID(t.end), Unit: t.unitName, Penyewa: t.customerName,
+    "Durasi (menit)": t.minutes, "Total (Rp)": t.amount, Pembayaran: t.payment,
+  })), "Laporan");
+}
+
+function svgTrendChart(labels, series) {
+  const w = 640, h = 220, padL = 64, padB = 26, padT = 14, padR = 14;
+  const chartW = w - padL - padR, chartH = h - padT - padB;
+  const allVals = series.flatMap(s => s.values);
+  const max = Math.max(1, ...allVals);
+  const stepX = labels.length > 1 ? chartW / (labels.length - 1) : 0;
+  const xFor = i => padL + stepX * i;
+  const yFor = v => padT + chartH - (v / max) * chartH;
+
+  let gridLines = "";
+  const steps = 4;
+  for (let s = 0; s <= steps; s++) {
+    const y = padT + chartH - (chartH * s / steps);
+    const val = max * s / steps;
+    gridLines += `<line x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}" stroke="var(--rp-line)" stroke-width="1" />`;
+    gridLines += `<text x="${padL-8}" y="${y+4}" font-family="var(--rp-mono)" font-size="10" fill="var(--rp-ink-dim)" text-anchor="end">${rupiah(val)}</text>`;
+  }
+
+  let defs = "", paths = "", dots = "";
+  series.forEach((s, si) => {
+    const points = s.values.map((v, i) => [xFor(i), yFor(v)]);
+    const linePath = points.map((p, i) => `${i===0?"M":"L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+    if (s.filled) {
+      const gradId = `rpTrendGrad${si}`;
+      defs += `<linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${s.color}" stop-opacity="0.4" />
+        <stop offset="100%" stop-color="${s.color}" stop-opacity="0" />
+      </linearGradient>`;
+      const areaPath = `${linePath} L${points[points.length-1][0].toFixed(1)},${(padT+chartH).toFixed(1)} L${points[0][0].toFixed(1)},${(padT+chartH).toFixed(1)} Z`;
+      paths += `<path d="${areaPath}" fill="url(#${gradId})" stroke="none" />`;
+    }
+    paths += `<path d="${linePath}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-dasharray="${s.dashed?"5,4":"0"}" stroke-linejoin="round" stroke-linecap="round" />`;
+    points.forEach(p => { dots += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.6" fill="${s.color}" />`; });
+  });
+
+  let labelsSvg = "";
+  labels.forEach((lab, i) => {
+    if (labels.length > 15 && i % 5 !== 0 && i !== labels.length - 1 && i !== 0) return;
+    labelsSvg += `<text x="${xFor(i).toFixed(1)}" y="${h-8}" font-family="var(--rp-mono)" font-size="11" fill="var(--rp-ink)" text-anchor="middle">${esc(lab)}</text>`;
+  });
+
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:220px;"><defs>${defs}</defs>${gridLines}${paths}${dots}${labelsSvg}</svg>`;
+}
+
+/* --------------------- Shared bits --------------------- */
+function emptyState(text) { return `<div class="rp-empty">${icon("info",15)} ${esc(text)}</div>`; }
+
+function wireTabExtras() {
+  const riwayatSearch = document.getElementById("riwayat-search");
+  if (riwayatSearch) {
+    riwayatSearch.addEventListener("input", (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      document.querySelectorAll("#riwayat-table tbody tr[data-name]").forEach(tr => {
+        tr.style.display = tr.dataset.name.includes(q) ? "" : "none";
+      });
+    });
+  }
+  const memberSearch = document.getElementById("member-search");
+  if (memberSearch) {
+    memberSearch.addEventListener("input", (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      document.querySelectorAll("#member-table tbody tr[data-name]").forEach(tr => {
+        tr.style.display = tr.dataset.name.includes(q) ? "" : "none";
+      });
+    });
+  }
+}
+
+/* =========================================================
+   Init
+========================================================= */
+loadAll();
+setInterval(() => {
+  if (ready && document.visibilityState === "visible" && navigator.onLine !== false) refreshData();
+}, 30000);
+</script>
+</body>
+</html>
