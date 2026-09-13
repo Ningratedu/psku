@@ -10,6 +10,9 @@
     try {
       var t = localStorage.getItem("rp_theme") || "light";
       document.documentElement.setAttribute("data-theme", t);
+      if (localStorage.getItem("rp_sidebar") === "collapsed") {
+        document.documentElement.setAttribute("data-sidebar", "collapsed");
+      }
     } catch (e) {}
   })();
 </script>
@@ -148,8 +151,6 @@
   .rp-nav-item:hover { background: var(--rp-hover-tint); color: var(--rp-ink); }
   .rp-nav-item.is-active { background: var(--rp-chip-bg); color: var(--rp-chip-text); box-shadow: 0 6px 14px -8px var(--rp-elevation-shadow); }
   .rp-sidebar-foot { border-top: 1px solid var(--rp-border); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-  .rp-stat-mini { display: flex; flex-direction: column; font-size: 11px; color: var(--rp-ink-dim); }
-  .rp-stat-mini strong { font-size: 13px; color: var(--rp-ink); font-family: var(--rp-mono); }
   .rp-sync-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--rp-ink-dim); margin-top: 4px; }
   .rp-sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--rp-teal); flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
   .rp-sync-dot.is-busy { background: var(--rp-amber); }
@@ -405,13 +406,6 @@ body:before{
 .rp-sidebar-foot{
   padding:15px 8px 0;
 }
-.rp-stat-mini{
-  padding:8px 10px;
-  border-radius:10px;
-  background:rgba(255,255,255,.025);
-  margin-bottom:4px;
-}
-[data-theme="light"] .rp-stat-mini{background:rgba(31,43,77,.035)}
 .rp-refresh-btn{
   width:100%;
   padding:8px 10px;
@@ -419,6 +413,53 @@ body:before{
   transition:.15s ease;
 }
 .rp-refresh-btn:hover{background:var(--rp-hover-tint);transform:translateY(-1px)}
+
+/* Toggle buka/tutup sidebar (desktop) */
+.rp-sidebar-toggle{
+  position:fixed; top:16px; left:16px; z-index:56;
+  width:38px; height:38px; border-radius:10px;
+  border:1px solid var(--rp-border-strong); background:var(--rp-surface-solid);
+  color:var(--rp-ink); display:flex; align-items:center; justify-content:center;
+  cursor:pointer; box-shadow:0 8px 20px -8px var(--rp-elevation-shadow);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  transition:transform .15s ease, background .15s ease;
+}
+.rp-sidebar-toggle:hover{ background:var(--rp-surface-2); }
+.rp-sidebar-toggle svg{ width:17px; height:17px; }
+
+@media (min-width: 721px) {
+  /* Menu jadi grid 2 kolom sebaris, bukan list vertikal */
+  .rp-nav{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+  }
+  .rp-nav-item{
+    flex-direction:column;
+    justify-content:center;
+    gap:5px;
+    padding:12px 6px;
+    text-align:center;
+  }
+  .rp-nav-item.is-active:after{
+    right:auto; left:50%; bottom:5px; top:auto;
+    width:16px; height:3px; transform:translateX(-50%);
+  }
+  .rp-nav-label{ font-size:10.5px; line-height:1.15; }
+
+  /* Sidebar bisa ditutup lewat tombol toggle */
+  .rp-sidebar{
+    transition: width .2s ease, padding .2s ease, opacity .15s ease;
+    overflow: hidden;
+  }
+  html[data-sidebar="collapsed"] .rp-sidebar{
+    width:0; padding-left:0; padding-right:0; border-right:none;
+    opacity:0; pointer-events:none;
+  }
+}
+@media (max-width: 720px){
+  .rp-sidebar-toggle{ display:none; }
+}
 
 /* Main */
 .rp-main{
@@ -851,6 +892,7 @@ const ICONS = {
   chart: '<path d="M4 20V10M12 20V4M20 20v-7"/><path d="M2 20h20"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8 6 18M18 6l1.8-1.8"/>',
   moon: '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
 };
 function getTheme() {
   try { return localStorage.getItem("rp_theme") || "dark"; } catch (e) { return "dark"; }
@@ -865,6 +907,16 @@ function setTheme(t) {
   document.documentElement.setAttribute("data-theme", t);
   try { localStorage.setItem("rp_theme", t); } catch (e) {}
   renderThemeToggle();
+}
+function toggleSidebar() {
+  const collapsed = document.documentElement.getAttribute("data-sidebar") === "collapsed";
+  if (collapsed) {
+    document.documentElement.removeAttribute("data-sidebar");
+    try { localStorage.removeItem("rp_sidebar"); } catch (e) {}
+  } else {
+    document.documentElement.setAttribute("data-sidebar", "collapsed");
+    try { localStorage.setItem("rp_sidebar", "collapsed"); } catch (e) {}
+  }
 }
 function toggleTheme() {
   setTheme(getTheme() === "dark" ? "light" : "dark");
@@ -1028,13 +1080,18 @@ function normalize(raw) {
     unitId: q.unitId || null, note: q.note || "", requestedAt: Number(q.requestedAt) || Date.now(),
   }));
 
-  return { settings: { businessName, defaultRate }, units, activeRentals, transactions, members, inventory, queue };
+  const expenses = (raw.Expenses || []).map(e => ({
+    id: e.id, date: Number(e.date) || Date.now(), category: e.category || "Lainnya",
+    description: e.description || "", amount: Number(e.amount) || 0,
+  }));
+
+  return { settings: { businessName, defaultRate }, units, activeRentals, transactions, members, inventory, queue, expenses };
 }
 
 /* =========================================================
    State
 ========================================================= */
-let state = { settings: { businessName: "Rental PS Saya", defaultRate: 5000 }, units: [], activeRentals: {}, transactions: [], members: [], inventory: [], queue: [] };
+let state = { settings: { businessName: "Rental PS Saya", defaultRate: 5000 }, units: [], activeRentals: {}, transactions: [], members: [], inventory: [], queue: [], expenses: [] };
 let currentTab = "dashboard";
 let ready = false;
 
@@ -1054,7 +1111,7 @@ function applyRemote(raw) {
   const skipUnits = !!ob.Units, skipActive = !!ob.ActiveRentals,
         skipTx = !!ob.Transactions, skipMembers = !!ob.Members,
         skipInv = !!ob.Inventory, skipSettings = !!ob.Settings,
-        skipQueue = !!ob.Queue;
+        skipQueue = !!ob.Queue, skipExpenses = !!ob.Expenses;
   if (!skipSettings) state.settings = incoming.settings;
   if (!skipUnits) state.units = incoming.units;
   if (!skipActive) state.activeRentals = incoming.activeRentals;
@@ -1062,6 +1119,7 @@ function applyRemote(raw) {
   if (!skipMembers) state.members = incoming.members;
   if (!skipInv) state.inventory = incoming.inventory;
   if (!skipQueue) state.queue = incoming.queue;
+  if (!skipExpenses) state.expenses = incoming.expenses;
   saveCache();
 }
 
@@ -1072,6 +1130,7 @@ async function loadAll() {
   if (cached) {
     state = cached;
     if (!Array.isArray(state.queue)) state.queue = [];
+    if (!Array.isArray(state.expenses)) state.expenses = [];
     ready = true;
     renderAll();
   }
@@ -1117,11 +1176,17 @@ function persistMembers() { apiSave("Members", state.members); }
 function persistInventory() { apiSave("Inventory", state.inventory); }
 function persistSettings() { apiSave("Settings", [state.settings]); }
 function persistQueue() { apiSave("Queue", state.queue); }
+function persistExpenses() { apiSave("Expenses", state.expenses); }
 
 /* =========================================================
    Business logic
 ========================================================= */
-function setTab(tab) { currentTab = tab; renderAll(); }
+function setTab(tab) {
+  currentTab = tab;
+  document.documentElement.setAttribute("data-sidebar", "collapsed");
+  try { localStorage.setItem("rp_sidebar", "collapsed"); } catch (e) {}
+  renderAll();
+}
 
 function startRental(unitId, customerName, memberId, note, plannedMinutes) {
   const startTime = Date.now();
@@ -1212,6 +1277,43 @@ function upsertInventory(item) {
   closeModal(); renderAll(); persistInventory();
 }
 function removeInventory(id) { state.inventory = state.inventory.filter(i => i.id !== id); renderAll(); persistInventory(); }
+
+/* --------------------- Pengeluaran (untuk Laba Rugi) --------------------- */
+const EXPENSE_CATEGORIES = ["Operasional (listrik/internet)", "Sewa tempat", "Gaji/THR", "Perawatan & servis alat", "Pembelian stok", "Lainnya"];
+function upsertExpense(exp) {
+  const idx = state.expenses.findIndex(x => x.id === exp.id);
+  if (idx >= 0) state.expenses[idx] = exp; else state.expenses.push(exp);
+  closeModal(); renderAll(); persistExpenses();
+}
+function removeExpense(id) { state.expenses = state.expenses.filter(e => e.id !== id); renderAll(); persistExpenses(); }
+function openExpenseModal(expenseId) {
+  const existing = state.expenses.find(e => e.id === expenseId);
+  const e = existing || { id: uid(), date: Date.now(), category: EXPENSE_CATEGORIES[0], description: "", amount: 0 };
+  const dateStr = new Date(e.date).toISOString().slice(0,10);
+  openModal(modalShell(existing ? "Ubah pengeluaran" : "Catat pengeluaran", `
+    <label class="rp-field"><span>Tanggal</span><input id="exp-date" type="date" value="${dateStr}" /></label>
+    <label class="rp-field"><span>Kategori</span><select id="exp-category">${EXPENSE_CATEGORIES.map(c=>`<option ${c===e.category?"selected":""}>${c}</option>`).join("")}</select></label>
+    <label class="rp-field"><span>Deskripsi (opsional)</span><input id="exp-desc" value="${esc(e.description||"")}" placeholder="Cth: Bayar token listrik" /></label>
+    <label class="rp-field"><span>Jumlah (Rp)</span><input id="exp-amount" type="number" min="0" value="${e.amount||""}" /></label>
+    <div class="rp-modal-foot">
+      <button class="rp-btn rp-btn-ghost" onclick="closeModal()">Batal</button>
+      <button class="rp-btn rp-btn-start" onclick="submitExpense('${e.id}')">Simpan</button>
+    </div>
+  `));
+}
+function submitExpense(id) {
+  const dateVal = document.getElementById("exp-date").value;
+  if (!dateVal) { flash("Tanggal wajib diisi."); return; }
+  const amountInput = document.getElementById("exp-amount").value.trim();
+  if (!amountInput || Number(amountInput) <= 0) { flash("Jumlah wajib diisi dan lebih dari 0."); return; }
+  upsertExpense({
+    id,
+    date: new Date(dateVal + "T12:00:00").getTime(),
+    category: document.getElementById("exp-category").value,
+    description: document.getElementById("exp-desc").value.trim(),
+    amount: Number(amountInput),
+  });
+}
 
 function saveBusinessName(v) { state.settings.businessName = v; persistSettings(); }
 
@@ -1518,10 +1620,12 @@ function confirmStart(unitId) {
   if (window._startMode === "member") {
     const sel = document.getElementById("start-member");
     const memberId = sel ? sel.value : "";
+    if (!memberId) { flash("Pilih pelanggan terlebih dahulu."); return; }
     const m = state.members.find(x => x.id === memberId);
     startRental(unitId, m ? m.name : "Tamu", memberId || null, document.getElementById("start-note").value, plannedMinutes);
   } else {
-    const name = document.getElementById("start-name").value || "Tamu";
+    const name = document.getElementById("start-name").value.trim();
+    if (!name) { flash("Nama tamu wajib diisi."); return; }
     startRental(unitId, name, null, document.getElementById("start-note").value, plannedMinutes);
   }
 }
@@ -1687,8 +1791,10 @@ function openUnitModal(unitId) {
 }
 function submitUnit(id, status) {
   const name = document.getElementById("unit-name").value.trim();
-  if (!name) return;
-  const rate = Number(document.getElementById("unit-rate").value) || 0;
+  if (!name) { flash("Nama unit wajib diisi."); return; }
+  const rateInput = document.getElementById("unit-rate").value.trim();
+  if (!rateInput) { flash("Tarif per jam wajib diisi."); return; }
+  const rate = Number(rateInput) || 0;
   upsertUnit({ id, name, rate, status });
 }
 
@@ -1706,8 +1812,9 @@ function openMemberModal(memberId) {
 }
 function submitMember(id) {
   const name = document.getElementById("member-name").value.trim();
-  if (!name) return;
-  const phone = document.getElementById("member-phone").value;
+  if (!name) { flash("Nama wajib diisi."); return; }
+  const phone = document.getElementById("member-phone").value.trim();
+  if (!phone) { flash("No. HP wajib diisi."); return; }
   upsertMember({ id, name, phone });
 }
 
@@ -1722,7 +1829,7 @@ function openInventoryModal(itemId) {
     <label class="rp-field"><span>Kategori</span><select id="inv-category">${CATEGORIES.map(c=>`<option ${c===item.category?"selected":""}>${c}</option>`).join("")}</select></label>
     <label class="rp-field"><span>Unit terkait (opsional)</span><select id="inv-unit"><option value="">—</option>${unitOptions}</select></label>
     <label class="rp-field"><span>Kondisi</span><select id="inv-condition">${CONDITIONS.map(c=>`<option ${c===item.condition?"selected":""}>${c}</option>`).join("")}</select></label>
-    <label class="rp-field"><span>Catatan</span><input id="inv-note" value="${esc(item.note||"")}" /></label>
+    <label class="rp-field"><span>Catatan (opsional)</span><input id="inv-note" value="${esc(item.note||"")}" /></label>
     <div class="rp-modal-foot">
       <button class="rp-btn rp-btn-ghost" onclick="closeModal()">Batal</button>
       <button class="rp-btn rp-btn-start" onclick="submitInventory('${item.id}')">Simpan</button>
@@ -1731,7 +1838,7 @@ function openInventoryModal(itemId) {
 }
 function submitInventory(id) {
   const name = document.getElementById("inv-name").value.trim();
-  if (!name) return;
+  if (!name) { flash("Nama item wajib diisi."); return; }
   upsertInventory({
     id, name,
     category: document.getElementById("inv-category").value,
@@ -1769,12 +1876,9 @@ function renderSyncDot() {
 
 function renderAll() {
   if (!ready) return;
-  const todayStr = new Date().toDateString();
-  const todayTx = state.transactions.filter(t => new Date(t.end).toDateString() === todayStr);
-  const todayRevenue = todayTx.reduce((a,t) => a + t.amount, 0);
-  const activeCount = Object.keys(state.activeRentals).length;
 
   document.getElementById("root").innerHTML = `
+    <button class="rp-sidebar-toggle" onclick="toggleSidebar()" title="Buka/tutup menu">${icon("menu",17)}</button>
     <aside class="rp-sidebar">
       <div class="rp-brand">
         <div class="rp-brand-mark">PS</div>
@@ -1787,9 +1891,6 @@ function renderAll() {
         ${NAV.map(n => `<button class="rp-nav-item${currentTab===n.id?" is-active":""}" onclick="setTab('${n.id}')">${icon(n.icon,18)}<span class="rp-nav-label">${esc(n.label)}</span></button>`).join("")}
       </nav>
       <div class="rp-sidebar-foot">
-        <div class="rp-stat-mini"><span>Unit aktif</span><strong>${activeCount} / ${state.units.length}</strong></div>
-        <div class="rp-stat-mini"><span>Antrian</span><strong>${state.queue.length}</strong></div>
-        <div class="rp-stat-mini"><span>Pendapatan hari ini</span><strong class="rp-mono">${rupiah(todayRevenue)}</strong></div>
         <div class="rp-sync-row"><span id="sync-dot" class="rp-sync-dot"></span><span id="sync-label">Tersinkron</span></div>
         <button class="rp-refresh-btn" onclick="refreshData()">Segarkan data</button>
       </div>
@@ -2027,6 +2128,10 @@ function toggleLaporanCompare() {
   window._laporanCompare = !window._laporanCompare;
   renderAll();
 }
+function setLaporanView(view) {
+  window._laporanView = view;
+  renderAll();
+}
 
 function getPeriodRange(period) {
   const now = new Date();
@@ -2112,10 +2217,39 @@ function buildLaporanTrend(period, currentStart) {
 }
 
 function renderLaporan() {
+  const view = window._laporanView || "ringkasan";
   const period = window._laporanPeriod || "bulan";
   const compare = !!window._laporanCompare;
   const { start, end, label: periodLabel } = getPeriodRange(period);
   const periodTx = state.transactions.filter(t => t.end >= start.getTime() && t.end <= end.getTime());
+
+  const periodPills = `
+    <div class="rp-field-row" style="max-width:420px;margin-bottom:10px;">
+      <button class="rp-pill${period==="minggu"?" is-on":""}" onclick="setLaporanPeriod('minggu')">Minggu ini</button>
+      <button class="rp-pill${period==="bulan"?" is-on":""}" onclick="setLaporanPeriod('bulan')">Bulan ini</button>
+      <button class="rp-pill${period==="tahun"?" is-on":""}" onclick="setLaporanPeriod('tahun')">Tahun ini</button>
+    </div>
+    <button class="rp-btn rp-btn-ghost" style="margin-bottom:18px;" onclick="toggleLaporanCompare()">
+      ${icon("history",14)} ${compare ? `Sembunyikan perbandingan` : `Bandingkan dengan ${periodCompareLabel[period]}`}
+    </button>`;
+
+  if (view === "labarugi") {
+    window._laporanExportTx = periodTx;
+    window._laporanExportPeriod = period;
+    return `
+      <div class="rp-page">
+        <header class="rp-page-head rp-page-head-row">
+          <div><h1>Laporan</h1><p class="rp-sub">${periodLabel} — data ini bisa dipakai untuk presentasi ke investor</p></div>
+          <button class="rp-btn rp-btn-ghost" onclick="exportLabaRugiCSV()">${icon("download",14)} Ekspor Excel</button>
+        </header>
+        <div class="rp-field-row" style="max-width:420px;margin-bottom:14px;">
+          <button class="rp-pill${view==="ringkasan"?" is-on":""}" onclick="setLaporanView('ringkasan')">Ringkasan Pendapatan</button>
+          <button class="rp-pill${view==="labarugi"?" is-on":""}" onclick="setLaporanView('labarugi')">Laba Rugi</button>
+        </div>
+        ${periodPills}
+        ${renderLabaRugiBody(period, compare, start, end, periodTx)}
+      </div>`;
+  }
 
   const totalRevenue = periodTx.reduce((a,t) => a+t.amount, 0);
   const totalTx = periodTx.length;
@@ -2169,14 +2303,11 @@ function renderLaporan() {
         <div><h1>Laporan</h1><p class="rp-sub">${periodLabel}</p></div>
         <button class="rp-btn rp-btn-ghost" onclick="exportLaporanCSV()" ${!periodTx.length?"disabled":""}>${icon("download",14)} Ekspor Excel</button>
       </header>
-      <div class="rp-field-row" style="max-width:420px;margin-bottom:10px;">
-        <button class="rp-pill${period==="minggu"?" is-on":""}" onclick="setLaporanPeriod('minggu')">Minggu ini</button>
-        <button class="rp-pill${period==="bulan"?" is-on":""}" onclick="setLaporanPeriod('bulan')">Bulan ini</button>
-        <button class="rp-pill${period==="tahun"?" is-on":""}" onclick="setLaporanPeriod('tahun')">Tahun ini</button>
+      <div class="rp-field-row" style="max-width:420px;margin-bottom:14px;">
+        <button class="rp-pill${view==="ringkasan"?" is-on":""}" onclick="setLaporanView('ringkasan')">Ringkasan Pendapatan</button>
+        <button class="rp-pill${view==="labarugi"?" is-on":""}" onclick="setLaporanView('labarugi')">Laba Rugi</button>
       </div>
-      <button class="rp-btn rp-btn-ghost" style="margin-bottom:18px;" onclick="toggleLaporanCompare()">
-        ${icon("history",14)} ${compare ? `Sembunyikan perbandingan` : `Bandingkan dengan ${periodCompareLabel[period]}`}
-      </button>
+      ${periodPills}
       <div class="rp-stat-row">
         <div class="rp-stat-card rp-clickable" onclick="openLaporanDetailModal('revenue')">
           <span class="rp-stat-label">Total pendapatan</span>
@@ -2208,6 +2339,93 @@ function renderLaporan() {
           <tbody>${byPayment.map(([name,d]) => `<tr><td>${esc(name)}</td><td class="rp-mono">${d.count}</td><td class="rp-mono">${rupiah(d.total)}</td></tr>`).join("")}</tbody>
         </table></div>`}
     </div>`;
+}
+
+function renderLabaRugiBody(period, compare, start, end, periodTx) {
+  const totalRevenue = periodTx.reduce((a,t) => a+t.amount, 0);
+  const periodExpenses = state.expenses.filter(e => e.date >= start.getTime() && e.date <= end.getTime());
+  const totalExpense = periodExpenses.reduce((a,e) => a+e.amount, 0);
+  const netProfit = totalRevenue - totalExpense;
+  const margin = totalRevenue ? (netProfit / totalRevenue * 100) : 0;
+
+  let deltaBadge = "";
+  if (compare) {
+    const prevRange = getPreviousPeriodRange(period, start);
+    const prevRevenue = state.transactions.filter(t => t.end >= prevRange.start.getTime() && t.end <= prevRange.end.getTime()).reduce((a,t) => a+t.amount, 0);
+    const prevExpense = state.expenses.filter(e => e.date >= prevRange.start.getTime() && e.date <= prevRange.end.getTime()).reduce((a,e) => a+e.amount, 0);
+    const prevNet = prevRevenue - prevExpense;
+    if (prevNet !== 0) {
+      const pct = ((netProfit - prevNet) / Math.abs(prevNet)) * 100;
+      const cls = pct > 0.5 ? "rp-delta-up" : pct < -0.5 ? "rp-delta-down" : "rp-delta-flat";
+      const arrow = pct > 0.5 ? "▲" : pct < -0.5 ? "▼" : "▬";
+      deltaBadge = `<div class="rp-delta-badge ${cls}">${arrow} ${Math.abs(pct).toFixed(1)}% vs ${periodCompareLabel[period]}</div>`;
+    } else if (netProfit !== 0) {
+      deltaBadge = `<div class="rp-delta-badge rp-delta-up">▲ Baru — ${periodCompareLabel[period]} kosong</div>`;
+    }
+  }
+
+  const byCatMap = {};
+  periodExpenses.forEach(e => {
+    if (!byCatMap[e.category]) byCatMap[e.category] = { count: 0, total: 0 };
+    byCatMap[e.category].count += 1;
+    byCatMap[e.category].total += e.amount;
+  });
+  const byCat = Object.entries(byCatMap).sort((a,b) => b[1].total - a[1].total);
+
+  const expRows = periodExpenses.slice().sort((a,b) => b.date - a.date).map(e => `
+    <tr>
+      <td>${fmtDateID(e.date)}</td>
+      <td>${esc(e.category)}</td>
+      <td>${esc(e.description || "-")}</td>
+      <td class="rp-mono">${rupiah(e.amount)}</td>
+      <td class="rp-row-actions">
+        <button class="rp-icon-btn" onclick="openExpenseModal('${e.id}')" title="Ubah">${icon("pencil",15)}</button>
+        <button class="rp-icon-btn rp-icon-danger" onclick="removeExpense('${e.id}')" title="Hapus">${icon("trash",15)}</button>
+      </td>
+    </tr>`).join("");
+
+  window._labaRugiExport = { periodTx, periodExpenses, totalRevenue, totalExpense, netProfit };
+
+  return `
+    <div class="rp-stat-row">
+      <div class="rp-stat-card"><span class="rp-stat-label">Total pendapatan</span><strong class="rp-mono rp-stat-value">${rupiah(totalRevenue)}</strong></div>
+      <div class="rp-stat-card"><span class="rp-stat-label">Total pengeluaran</span><strong class="rp-mono rp-stat-value">${rupiah(totalExpense)}</strong></div>
+      <div class="rp-stat-card">
+        <span class="rp-stat-label">Laba/rugi bersih</span>
+        <strong class="rp-mono rp-stat-value" style="color:${netProfit>=0?"var(--rp-teal)":"var(--rp-red)"};">${netProfit<0?"-":""}${rupiah(Math.abs(netProfit))}</strong>
+        ${deltaBadge}
+      </div>
+      <div class="rp-stat-card"><span class="rp-stat-label">Margin laba</span><strong class="rp-mono rp-stat-value">${margin.toFixed(1)}%</strong></div>
+    </div>
+    <div class="rp-ruled-head">Pengeluaran per kategori</div>
+    ${byCat.length===0 ? emptyState("Belum ada pengeluaran tercatat pada periode ini.") : `
+      <div class="rp-table-wrap"><table class="rp-table">
+        <thead><tr><th>Kategori</th><th>Jumlah transaksi</th><th>Total</th></tr></thead>
+        <tbody>${byCat.map(([name,d]) => `<tr><td>${esc(name)}</td><td class="rp-mono">${d.count}</td><td class="rp-mono">${rupiah(d.total)}</td></tr>`).join("")}</tbody>
+      </table></div>`}
+    <div class="rp-page-head-row" style="margin-top:22px;">
+      <div class="rp-ruled-head" style="margin:0;border-bottom:none;padding-bottom:0;">Catatan pengeluaran</div>
+      <button class="rp-btn rp-btn-start" onclick="openExpenseModal('')">${icon("plus",14)} Catat pengeluaran</button>
+    </div>
+    <div style="border-bottom:1px solid var(--rp-border);margin:8px 0 14px;"></div>
+    ${periodExpenses.length===0 ? emptyState("Belum ada pengeluaran tercatat pada periode ini.") : `
+      <div class="rp-table-wrap"><table class="rp-table">
+        <thead><tr><th>Tanggal</th><th>Kategori</th><th>Deskripsi</th><th>Jumlah</th><th></th></tr></thead>
+        <tbody>${expRows}</tbody>
+      </table></div>`}
+  `;
+}
+function exportLabaRugiCSV() {
+  const data = window._labaRugiExport;
+  if (!data || (!data.periodTx.length && !data.periodExpenses.length)) { flash("Tidak ada data untuk diekspor."); return; }
+  const rows = [
+    ...data.periodTx.map(t => ({ Tanggal: fmtDateID(t.end), Jenis: "Pendapatan", Kategori: "Sewa " + t.unitName, Deskripsi: t.customerName, "Jumlah (Rp)": t.amount })),
+    ...data.periodExpenses.map(e => ({ Tanggal: fmtDateID(e.date), Jenis: "Pengeluaran", Kategori: e.category, Deskripsi: e.description || "-", "Jumlah (Rp)": -e.amount })),
+    { Tanggal: "", Jenis: "", Kategori: "", Deskripsi: "TOTAL PENDAPATAN", "Jumlah (Rp)": data.totalRevenue },
+    { Tanggal: "", Jenis: "", Kategori: "", Deskripsi: "TOTAL PENGELUARAN", "Jumlah (Rp)": -data.totalExpense },
+    { Tanggal: "", Jenis: "", Kategori: "", Deskripsi: "LABA/RUGI BERSIH", "Jumlah (Rp)": data.netProfit },
+  ];
+  downloadXLSX(`laba-rugi-${window._laporanExportPeriod||"bulan"}.xlsx`, rows, "Laba Rugi");
 }
 function exportLaporanCSV() {
   const tx = window._laporanExportTx || [];
