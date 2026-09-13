@@ -840,11 +840,26 @@ body:before{
 <button id="theme-toggle" class="rp-theme-toggle" onclick="toggleTheme()" title="Ganti mode terang/gelap" aria-label="Ganti mode terang/gelap"></button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script>
 /* =========================================================
-   KONFIGURASI — GANTI SESUAI DEPLOYMENT APPS SCRIPT KAMU
+   KONFIGURASI — Firebase
 ========================================================= */
-const API_URL = "https://script.google.com/macros/s/AKfycby-FqFnNa4d3AXtDiB_1hluP_1Cbv3jhMx_FKcZvpm6RJNjl0qOBrFUhFzvbm7Y_d1hzg/exec";
+const firebaseConfig = {
+  apiKey: "AIzaSyCMicu2tR3pArLMI8GZ6Sp8kZu3GAMMJZw",
+  authDomain: "founderhub-3a483.firebaseapp.com",
+  projectId: "founderhub-3a483",
+  storageBucket: "founderhub-3a483.firebasestorage.app",
+  messagingSenderId: "378435097175",
+  appId: "1:378435097175:web:f7a5795de144db76d5c912",
+  measurementId: "G-QEC0KJ2ZMQ"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+db.enablePersistence({ synchronizeTabs: true }).catch((e) => console.warn("Offline persistence tidak aktif:", e.code));
+const dataCol = db.collection("data");
+const SHEETS = ["Settings", "Units", "ActiveRentals", "Transactions", "Members", "Inventory", "Queue", "Expenses"];
 
 /* =========================================================
    Helpers
@@ -929,120 +944,37 @@ function icon(name, size) {
 }
 
 /* =========================================================
-   API — jembatan ke Google Sheets (Apps Script)
-   Dioptimalkan untuk sinyal lemah: timeout, cache lokal,
-   dan outbox retry biar perubahan tidak hilang.
+   API — jembatan ke Firestore
+   Real-time via onSnapshot; offline queue & cache sudah
+   ditangani otomatis oleh Firestore SDK (enablePersistence).
 ========================================================= */
-const FETCH_TIMEOUT_MS = 12000;
-const CACHE_KEY = "rp_cache_v1";
-const OUTBOX_KEY = "rp_outbox_v1";
-
-let syncState = "idle"; // idle | busy | error
+let syncState = "idle"; // idle | error (busy ditandai lewat pendingWrites)
 let isLoading = false;
-let outboxRetryTimer = null;
+let pendingWrites = 0;
 
 function setSync(s) { syncState = s; renderSyncDot(); }
-
-function fetchWithTimeout(url, options, ms) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms || FETCH_TIMEOUT_MS);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
-}
-
-function loadCache() {
-  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; }
-}
-function saveCache() {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(state)); } catch {}
-}
-
-function getOutbox() {
-  try { return JSON.parse(localStorage.getItem(OUTBOX_KEY) || "{}"); } catch { return {}; }
-}
-function setOutbox(ob) {
-  try { localStorage.setItem(OUTBOX_KEY, JSON.stringify(ob)); } catch {}
-}
-function outboxHas(sheet) { return !!getOutbox()[sheet]; }
-function outboxCount() { return Object.keys(getOutbox()).length; }
-
-async function apiGetAll() {
-  const res = await fetchWithTimeout(API_URL, {}, FETCH_TIMEOUT_MS);
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || "Gagal memuat data");
-  return json.data;
-}
+function docRef(sheet) { return dataCol.doc(sheet); }
 
 async function apiSave(sheet, rows) {
-  // Simpan dulu secara lokal (outbox) sebelum coba kirim — kalau sinyal
-  // putus di tengah jalan, perubahan ini tidak akan hilang.
-  const ob = getOutbox();
-  ob[sheet] = { rows, ts: Date.now() };
-  setOutbox(ob);
-  saveCache(); // state lokal (termasuk perubahan ini) ikut tersimpan di perangkat
+  pendingWrites++;
   renderSyncDot();
-
-  setSync("busy");
   try {
-    if (navigator.onLine === false) throw new Error("offline");
-    const res = await fetchWithTimeout(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ sheet, rows }),
-    }, FETCH_TIMEOUT_MS);
-    const json = await res.json();
-    if (!json.ok) throw new Error(json.error || "Gagal menyimpan");
-    const ob2 = getOutbox();
-    delete ob2[sheet];
-    setOutbox(ob2);
+    await docRef(sheet).set({ rows });
     setSync("idle");
   } catch (e) {
     console.error(e);
     setSync("error");
-    flash("Sinyal lemah — perubahan disimpan di perangkat, akan disinkron otomatis.");
-    scheduleOutboxRetry();
+    flash("Gagal menyimpan — cek koneksi internet.");
+  } finally {
+    pendingWrites--;
+    renderSyncDot();
   }
-  renderSyncDot();
 }
 
-function scheduleOutboxRetry(delayMs) {
-  clearTimeout(outboxRetryTimer);
-  outboxRetryTimer = setTimeout(flushOutbox, delayMs || 6000);
-}
-
-async function flushOutbox() {
-  const ob = getOutbox();
-  const entries = Object.entries(ob);
-  if (!entries.length) return;
-  if (navigator.onLine === false) { scheduleOutboxRetry(8000); return; }
-  for (const [sheet, entry] of entries) {
-    try {
-      const res = await fetchWithTimeout(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ sheet, rows: entry.rows }),
-      }, FETCH_TIMEOUT_MS);
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error || "Gagal menyimpan");
-      const ob2 = getOutbox();
-      delete ob2[sheet];
-      setOutbox(ob2);
-      setSync("idle");
-    } catch (e) {
-      // Masih gagal — biarkan di outbox, coba lagi nanti dengan jeda lebih lama.
-      scheduleOutboxRetry(15000);
-      renderSyncDot();
-      return;
-    }
-  }
-  renderSyncDot();
-}
-
-window.addEventListener("online", () => flushOutbox());
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") {
-    flushOutbox();
-    if (ready) refreshData();
-  }
+window.addEventListener("online", () => setSync("idle"));
+window.addEventListener("offline", () => {
+  setSync("error");
+  flash("Sinyal terputus — perubahan akan otomatis tersinkron saat online kembali.");
 });
 
 function normalize(raw) {
@@ -1102,59 +1034,56 @@ function flash(msg) {
   flash._timer = setTimeout(() => { t.style.display = "none"; }, 2400);
 }
 
-// Terapkan data dari server, tapi jangan timpa bagian yang masih
-// menunggu tersinkron di outbox (biar perubahan lokal tidak hilang
-// saat sinyal lemah dan refresh otomatis jalan duluan).
-function applyRemote(raw) {
-  const incoming = normalize(raw);
-  const ob = getOutbox();
-  const skipUnits = !!ob.Units, skipActive = !!ob.ActiveRentals,
-        skipTx = !!ob.Transactions, skipMembers = !!ob.Members,
-        skipInv = !!ob.Inventory, skipSettings = !!ob.Settings,
-        skipQueue = !!ob.Queue, skipExpenses = !!ob.Expenses;
-  if (!skipSettings) state.settings = incoming.settings;
-  if (!skipUnits) state.units = incoming.units;
-  if (!skipActive) state.activeRentals = incoming.activeRentals;
-  if (!skipTx) state.transactions = incoming.transactions;
-  if (!skipMembers) state.members = incoming.members;
-  if (!skipInv) state.inventory = incoming.inventory;
-  if (!skipQueue) state.queue = incoming.queue;
-  if (!skipExpenses) state.expenses = incoming.expenses;
-  saveCache();
+// Simpan data mentah terakhir per "sheet" di sini. Tiap dokumen Firestore
+// punya listener sendiri (onSnapshot) — begitu salah satu berubah (dari
+// device manapun), kita rakit ulang jadi satu `raw` lengkap lalu normalize().
+const rawCache = { Settings: [], Units: [], ActiveRentals: [], Transactions: [], Members: [], Inventory: [], Queue: [], Expenses: [] };
+const loadedSheets = new Set();
+
+function applyRawCache() {
+  const incoming = normalize(rawCache);
+  state.settings = incoming.settings;
+  state.units = incoming.units;
+  state.activeRentals = incoming.activeRentals;
+  state.transactions = incoming.transactions;
+  state.members = incoming.members;
+  state.inventory = incoming.inventory;
+  state.queue = incoming.queue;
+  state.expenses = incoming.expenses;
 }
 
-async function loadAll() {
-  // Tampilkan dulu data terakhir yang tersimpan di perangkat (kalau ada)
-  // supaya kasir tidak menatap layar kosong menunggu sinyal.
-  const cached = loadCache();
-  if (cached) {
-    state = cached;
-    if (!Array.isArray(state.queue)) state.queue = [];
-    if (!Array.isArray(state.expenses)) state.expenses = [];
-    ready = true;
-    renderAll();
-  }
-  try {
-    const raw = await apiGetAll();
-    applyRemote(raw);
-  } catch (e) {
-    console.error(e);
-    if (!cached) flash("Gagal memuat data — cek koneksi internet.");
-  }
-  ready = true;
-  renderAll();
-  flushOutbox();
+function initFirestoreListeners() {
+  SHEETS.forEach((sheet) => {
+    docRef(sheet).onSnapshot(
+      (snap) => {
+        rawCache[sheet] = (snap.exists && snap.data().rows) || [];
+        loadedSheets.add(sheet);
+        applyRawCache();
+        if (loadedSheets.size >= SHEETS.length) ready = true;
+        if (ready) renderAll();
+      },
+      (e) => {
+        console.error(e);
+        loadedSheets.add(sheet);
+        if (loadedSheets.size >= SHEETS.length) ready = true;
+        setSync("error");
+        flash("Gagal memuat data — cek koneksi internet.");
+        if (ready) renderAll();
+      }
+    );
+  });
 }
 
+// Dengan onSnapshot, data sudah selalu real-time. Tombol "Segarkan data"
+// tetap ada untuk memaksa cek ulang ke server (berguna kalau kasir ragu).
 async function refreshData() {
   if (isLoading) return; // hindari request numpuk kalau sinyal lambat
   isLoading = true;
   setSync("busy");
   try {
-    const raw = await apiGetAll();
-    applyRemote(raw);
+    await Promise.all(SHEETS.map((s) => docRef(s).get({ source: "server" })));
     setSync("idle");
-    renderAll();
+    flash("Data sudah yang terbaru.");
   } catch (e) {
     setSync("error");
     flash("Sinyal lemah — gagal menyegarkan data, dicoba lagi otomatis.");
@@ -1865,11 +1794,9 @@ function renderSyncDot() {
   const dot = document.getElementById("sync-dot");
   const label = document.getElementById("sync-label");
   if (!dot) return;
-  const pending = outboxCount();
   let cls = "", text = "Tersinkron";
-  if (syncState === "busy") { cls = " is-busy"; text = "Menyimpan…"; }
-  else if (pending > 0) { cls = " is-busy"; text = "Menunggu sinyal (" + pending + ")"; }
-  else if (syncState === "error") { cls = " is-error"; text = "Gagal sinkron"; }
+  if (pendingWrites > 0) { cls = " is-busy"; text = "Menyimpan…"; }
+  else if (syncState === "error") { cls = " is-error"; text = "Sinyal lemah"; }
   dot.className = "rp-sync-dot" + cls;
   label.textContent = text;
 }
@@ -2517,10 +2444,7 @@ function wireTabExtras() {
 /* =========================================================
    Init
 ========================================================= */
-loadAll();
-setInterval(() => {
-  if (ready && document.visibilityState === "visible" && navigator.onLine !== false) refreshData();
-}, 30000);
+initFirestoreListeners();
 </script>
 </body>
 </html>
